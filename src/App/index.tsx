@@ -1,8 +1,8 @@
 import React from 'react';
 import { useObserver } from 'mobx-react';
-import styled from 'styled-components';
+import styled, { StyledComponent } from 'styled-components';
 import { Classes } from '@blueprintjs/core';
-import { Flex } from 'reflexbox';
+import { BoxType, Flex } from 'reflexbox';
 import { Colors } from './blueprint';
 import AppHeader from './components/AppHeader';
 import BookSelector from './components/BookSelector';
@@ -10,24 +10,24 @@ import ChapterSelector from './components/ChapterSelector';
 import Preview from './components/Preview';
 import Actions from './components/Actions';
 import { useStores } from './store';
-import { useAnalytics } from './components/Analytics';
+import { IAnalyticsContext, useAnalytics } from './components/Analytics';
 import './index.scss';
 const { ipcRenderer } = window.require('electron');
 
-const AppWrapper = styled(Flex)`
+const AppWrapper: StyledComponent<BoxType, any, {}, never> = styled(Flex)`
   position: relative;
 `;
 
-export default function App() {
-  const { settings } = useStores();
-  const { analytics } = useAnalytics();
+export default function App(): JSX.Element {
+  const storeRecord: Record<string, any> = useStores();
+  const analyticsContext: IAnalyticsContext = useAnalytics();
 
-  React.useEffect(() => {
-    ipcRenderer.send('did-start-getprojectstructure', settings.rootDirectories);
-  }, [settings.rootDirectories]);
+  React.useEffect((): void => {
+    ipcRenderer.send('did-start-getprojectstructure', storeRecord.settings.rootDirectories);
+  }, [storeRecord.settings.rootDirectories]);
 
-  React.useEffect(() => {
-    analytics.trackScreenview('Home');
+  React.useEffect((): void => {
+    analyticsContext.analytics.trackScreenview('Home');
   }, []);
 
   return useObserver(() => (

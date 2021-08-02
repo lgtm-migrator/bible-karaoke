@@ -3,8 +3,9 @@ import os from 'os';
 import path from 'path';
 import { persist } from 'mobx-persist';
 import { PROJECT_TYPE, DEFAULT_OUTPUT_DIRECTORY } from '../constants';
+import Store from '.';
 
-export const getDefaultHearThisDirectory = () => {
+export const getDefaultHearThisDirectory = (): string => {
   switch (process.platform) {
     case 'win32':
       return 'C:\\ProgramData\\SIL\\HearThis\\';
@@ -14,7 +15,7 @@ export const getDefaultHearThisDirectory = () => {
   }
 };
 
-export const getDefaultScriptureAppBuilderDirectory = () => {
+export const getDefaultScriptureAppBuilderDirectory = (): string => {
   switch (process.platform) {
     case 'win32':
       return path.join(os.homedir(), 'Documents', 'App Builder', 'Scripture Apps', 'App Projects');
@@ -25,28 +26,30 @@ export const getDefaultScriptureAppBuilderDirectory = () => {
 };
 
 class Settings {
-  constructor(root) {
+  root: Store;
+
+  constructor(root: Store) {
     this.root = root;
   }
 
   @persist('list')
   @observable
-  hearThisRootDirectories = [getDefaultHearThisDirectory()];
+  hearThisRootDirectories: string[] = [getDefaultHearThisDirectory()];
 
   @persist('list')
   @observable
-  scriptureAppBuilderRootDirectories = [getDefaultScriptureAppBuilderDirectory()];
+  scriptureAppBuilderRootDirectories: string[] = [getDefaultScriptureAppBuilderDirectory()];
 
   @persist
   @observable
-  outputDirectory = DEFAULT_OUTPUT_DIRECTORY;
+  outputDirectory: string = DEFAULT_OUTPUT_DIRECTORY;
 
   @persist
   @observable
-  enableAnalytics = false;
+  enableAnalytics: boolean = false;
 
   @computed({ keepAlive: true })
-  get rootDirectories() {
+  get rootDirectories(): { [x: string]: string[] } {
     return {
       [PROJECT_TYPE.hearThis]: this.hearThisRootDirectories.slice(),
       [PROJECT_TYPE.scriptureAppBuilder]: this.scriptureAppBuilderRootDirectories.slice(),
@@ -54,22 +57,22 @@ class Settings {
   }
 
   @action.bound
-  setHearThisRootDirectories(directories) {
+  setHearThisRootDirectories(directories: string[]): void {
     this.hearThisRootDirectories = directories;
   }
 
   @action.bound
-  setScriptureAppBuilderRootDirectories(directories) {
+  setScriptureAppBuilderRootDirectories(directories: string[]): void {
     this.scriptureAppBuilderRootDirectories = directories;
   }
 
   @action.bound
-  setOutputDirectory(outputDirectory) {
+  setOutputDirectory(outputDirectory: string): void {
     this.outputDirectory = outputDirectory;
   }
 
   @action.bound
-  setEnableAnalytics(enableAnalytics) {
+  setEnableAnalytics(enableAnalytics: boolean): void {
     this.enableAnalytics = enableAnalytics;
   }
 }
