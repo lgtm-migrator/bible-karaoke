@@ -55,7 +55,8 @@ export async function convert(
         audioFiles = chapter.audio.files.map((f) => f.filename);
       }
       onProgress({ status: 'Combining video frames...', percent });
-      await combineFrames({ audioFiles, imagesPath, framerateIn: 15, outputName });
+      const overwriteOutputFiles = animationSettings.output.overwriteOutputFiles;
+      await combineFrames({ audioFiles, imagesPath, framerateIn: 15, outputName, overwriteOutputFiles });
       if (isCombined) {
         videoPathsToCombine.push(outputName);
       }

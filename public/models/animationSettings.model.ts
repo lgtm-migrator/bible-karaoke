@@ -31,6 +31,7 @@ export interface SpeechBubbleSettings {
 export interface OutputSettings {
   readonly directory: string;
   readonly filename: string;
+  readonly overwriteOutputFiles: boolean;
 }
 
 export interface TextLocationSettings {

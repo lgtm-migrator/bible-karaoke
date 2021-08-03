@@ -4,4 +4,5 @@ export interface FfmpegSettings {
   readonly framerateIn: number;
   readonly framerateOut?: number;
   readonly outputName: string;
+  readonly overwriteOutputFiles: boolean;
 }

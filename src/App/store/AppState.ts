@@ -482,6 +482,7 @@ class AppState {
         output: {
           filename: this.getVideoName(),
           directory: toJS(this.root.settings.outputDirectory),
+          overwriteOutputFiles: toJS(this.root.settings.overwriteOutputFiles),
         },
       },
     };

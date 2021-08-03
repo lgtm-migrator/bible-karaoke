@@ -46,7 +46,11 @@ class Settings {
 
   @persist
   @observable
-  enableAnalytics = false;
+  overwriteOutputFiles: boolean = false;
+
+  @persist
+  @observable
+  enableAnalytics: boolean = false;
 
   @computed({ keepAlive: true })
   get rootDirectories(): { [x: string]: string[] } {
@@ -69,6 +73,11 @@ class Settings {
   @action.bound
   setOutputDirectory(outputDirectory: string): void {
     this.outputDirectory = outputDirectory;
+  }
+
+  @action.bound
+  setOverwriteFile(overwriteOutputFiles: boolean): void {
+    this.overwriteOutputFiles = overwriteOutputFiles;
   }
 
   @action.bound

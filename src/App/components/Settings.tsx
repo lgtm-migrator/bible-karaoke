@@ -136,6 +136,13 @@ export default function Settings(): JSX.Element {
               <Button minimal icon="reset" onClick={resetOutputDir} />
           </Tooltip>
         </Flex>
+        <Checkbox
+          checked={settings.overwriteOutputFiles}
+          onChange={(event): void => {
+            settings.setOverwriteFile(event.currentTarget.checked);
+          }}
+          label="Overwrite existing file(s)"
+        />
       </Card>
       <Card mb={3}>
         <Flex alignItems="center" justifyContent="space-between">
