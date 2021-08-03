@@ -4,8 +4,8 @@ import { testPaths } from '../../../../test/test-path-constants';
 export const scenario1 = {
   input: {
     project: {
-      name: 'ExampleHearThisProject',
-      fullPath: testPaths.exampleHearThisProject,
+      name: testPaths.exampleHearThisProjectName,
+      fullPath: testPaths.exampleHearThisProjectPath,
       books: [
         {
           name: 'Book1',
@@ -19,19 +19,19 @@ export const scenario1 = {
     },
   },
   output: {
-    dirName: 'ExampleHearThisProject',
+    name: testPaths.exampleHearThisProjectName,
+    dirName: testPaths.exampleHearThisProjectPath,
     books: [
       {
         name: 'Book1',
         chapters: [
           {
-            book: 'Book1',
-            chapter: '0',
+            name: '0',
             audio: {
               files: [
-                { filename: path.join(testPaths.exampleHearThisProject, 'Book1', '0', '0.wav'), length: 2300 },
-                { filename: path.join(testPaths.exampleHearThisProject, 'Book1', '0', '1.wav'), length: 5500 },
-                { filename: path.join(testPaths.exampleHearThisProject, 'Book1', '0', '2.wav'), length: 9500 },
+                { filename: path.join(testPaths.exampleHearThisProjectPath, 'Book1', '0', '0.wav'), length: 2300 },
+                { filename: path.join(testPaths.exampleHearThisProjectPath, 'Book1', '0', '1.wav'), length: 5500 },
+                { filename: path.join(testPaths.exampleHearThisProjectPath, 'Book1', '0', '2.wav'), length: 9500 },
               ],
               length: 17300,
             },

@@ -10,45 +10,41 @@ import fs from 'fs';
 test('render frames with htmlContent', async (t) => {
   const timings = chapterFormatToTimings(bkChapter);
   await tempy.directory.task(async (dir: string) => {
-    const projectData = {
-      outputLocation: dir,
-    };
-    await render(animationSettings, projectData, timings);
+    await render(animationSettings, dir, timings);
     const directoryOfFrameFiles = fs.readdirSync(dir);
     t.is(directoryOfFrameFiles.length, 35);
   });
 });
 
-const animationSettings: AnimationSettings  = {
+const animationSettings: AnimationSettings = {
   text: {
-    fontFamily: "",
+    fontFamily: '',
     fontSize: 12,
-    color: "black",
+    color: 'black',
     bold: false,
     italic: false,
-    highlightColor: "white",
-    highlightRGB: "",
+    highlightColor: 'white',
+    highlightRGB: '',
   },
   background: {
-    color: "red",
-    type: "color",
+    color: 'red',
+    type: 'color',
   },
   speechBubble: {
-    color: "yellow",
-    rgba: "",
+    color: 'yellow',
+    rgba: '',
     opacity: 80,
   },
-  output: { directory: "", filename: ""},
-  textLocation: { location: "center", },
-  };
+  output: { directory: '', filename: '' },
+  textLocation: { location: 'center' },
+};
 
-const bkChapter  = {
-  book: 'Book1',
-  chapter: '0',
+const bkChapter = {
+  name: '0',
   audio: {
     files: [
       {
-        filename: join(testPaths.exampleHearThisProject, 'Book1', '0', '0.wav'),
+        filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '0', '0.wav'),
         length: 2300,
       },
     ],

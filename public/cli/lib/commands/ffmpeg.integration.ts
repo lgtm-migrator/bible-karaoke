@@ -7,8 +7,8 @@ import tempy from 'tempy';
 
 test('mergeWavFiles smoke test: multiple files: success', async (t) => {
   const wavFiles = [
-    path.join(testPaths.exampleHearThisProject, 'Book1', '1', '1.wav'),
-    path.join(testPaths.exampleHearThisProject, 'Book1', '1', '2.wav'),
+    path.join(testPaths.exampleHearThisProjectPath, 'Book1', '1', '1.wav'),
+    path.join(testPaths.exampleHearThisProjectPath, 'Book1', '1', '2.wav'),
   ];
   const newFilePath = await mergeWavFiles(wavFiles);
 
@@ -19,8 +19,8 @@ test('ffmpeg combineFrames creates video', async (t) => {
   await tempy.directory.task(async (dir: string) => {
     const ffmpegSettings = {
       audioFiles: [
-        path.join(testPaths.exampleHearThisProject, 'Book1', '1', '1.wav'),
-        path.join(testPaths.exampleHearThisProject, 'Book1', '1', '2.wav'),
+        path.join(testPaths.exampleHearThisProjectPath, 'Book1', '1', '1.wav'),
+        path.join(testPaths.exampleHearThisProjectPath, 'Book1', '1', '2.wav'),
       ],
       imagesPath: testPaths.frameImages,
       framerateIn: 15,

@@ -18,8 +18,7 @@ interface ScriptLine {
 
 async function convertChapter(chapter: ConvertChapter, book: ConvertBook, project: ConvertProject): Promise<BKChapter> {
   const chapterDetails: BKChapter = {
-    book: book.name,
-    chapter: chapter.name,
+    name: chapter.name,
     audio: {
       files: [],
       length: 0,
@@ -68,7 +67,7 @@ async function convertChapter(chapter: ConvertChapter, book: ConvertBook, projec
 }
 
 export async function bkImport(project: ConvertProject): Promise<BKProject> {
-  const bkProject: BKProject = { dirName: project.fullPath, books: [] };
+  const bkProject: BKProject = { name: project.name, dirName: project.fullPath, books: [] };
   for await (const book of project.books) {
     const chapters = [];
     for await (const chapter of book.chapters) {

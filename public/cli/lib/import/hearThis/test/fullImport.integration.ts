@@ -11,26 +11,26 @@ test('read-and-import-ht-project', async (t) => {
 });
 
 const expected = {
-  dirName: testPaths.exampleHearThisProject,
+  name: testPaths.exampleHearThisProjectName,
+  dirName: testPaths.exampleHearThisProjectPath,
   books: [
     {
       name: 'Book1',
       chapters: [
         {
-          book: 'Book1',
-          chapter: '0',
+          name: '0',
           audio: {
             files: [
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book1', '0', '0.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '0', '0.wav'),
                 length: 2300,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book1', '0', '1.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '0', '1.wav'),
                 length: 5500,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book1', '0', '2.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '0', '2.wav'),
                 length: 9500,
               },
             ],
@@ -64,16 +64,15 @@ const expected = {
           ],
         },
         {
-          book: 'Book1',
-          chapter: '1',
+          name: '1',
           audio: {
             files: [
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book1', '1', '1.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '1', '1.wav'),
                 length: 3200,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book1', '1', '2.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '1', '2.wav'),
                 length: 6500,
               },
             ],
@@ -99,16 +98,15 @@ const expected = {
           ],
         },
         {
-          book: 'Book1',
-          chapter: '2',
+          name: '2',
           audio: {
             files: [
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book1', '2', '1.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '2', '1.wav'),
                 length: 13600,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book1', '2', '2.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '2', '2.wav'),
                 length: 16500,
               },
             ],
@@ -134,10 +132,9 @@ const expected = {
           ],
         },
         {
-          book: 'Book1',
-          chapter: '3',
+          name: '3',
           audio: {
-            filename: join(testPaths.exampleHearThisProject, 'Book1', '3', '0.wav'),
+            filename: join(testPaths.exampleHearThisProjectPath, 'Book1', '3', '0.wav'),
             length: 1400,
           },
           segments: [
@@ -157,16 +154,15 @@ const expected = {
       name: 'Book2',
       chapters: [
         {
-          book: 'Book2',
-          chapter: '0',
+          name: '0',
           audio: {
             files: [
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book2', '0', '1.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book2', '0', '1.wav'),
                 length: 7600,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book2', '0', '2.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book2', '0', '2.wav'),
                 length: 20000,
               },
             ],
@@ -192,20 +188,19 @@ const expected = {
           ],
         },
         {
-          book: 'Book2',
-          chapter: '1',
+          name: '1',
           audio: {
             files: [
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book2', '1', '1.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book2', '1', '1.wav'),
                 length: 10500,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book2', '1', '2.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book2', '1', '2.wav'),
                 length: 12400,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book2', '1', '3.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book2', '1', '3.wav'),
                 length: 11500,
               },
             ],
@@ -239,20 +234,19 @@ const expected = {
           ],
         },
         {
-          book: 'Book2',
-          chapter: '2',
+          name: '2',
           audio: {
             files: [
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book2', '2', '2.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book2', '2', '2.wav'),
                 length: 23200,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book2', '2', '3.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book2', '2', '3.wav'),
                 length: 10100,
               },
               {
-                filename: join(testPaths.exampleHearThisProject, 'Book2', '2', '4.wav'),
+                filename: join(testPaths.exampleHearThisProjectPath, 'Book2', '2', '4.wav'),
                 length: 10400,
               },
             ],

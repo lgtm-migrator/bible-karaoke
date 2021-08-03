@@ -11,7 +11,7 @@ declare function renderNextFrame(
 export async function record(
   htmlContent: string,
   numberOfFrames: number,
-  outputLocation: string,
+  frameDirectory: string,
   logEachFrame = false,
   notifyEvent?: EventEmitter
 ): Promise<void> {
@@ -40,7 +40,7 @@ export async function record(
     const filename = `frame_${paddedIndex}.png`;
     await page.screenshot({
       omitBackground: false,
-      path: path.join(outputLocation, filename),
+      path: path.join(frameDirectory, filename),
     });
     if (notifyEvent != null) {
       const eventData: RecordFrameEventData = { currentFrame: i, totalFrames: numberOfFrames };
