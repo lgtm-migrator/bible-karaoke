@@ -69,7 +69,14 @@ export async function prepareLogger(numLogsToKeep = 10, pathToLogDir = ''): Prom
               info: 'cyan',
             },
           }),
-          winston.format.simple()
+          winston.format.printf((info) => {
+            const {level, message, service, ...meta} = info;
+            if (Object.keys(meta).length){
+              return `${info.level}: ${info.message} ${JSON.stringify(meta, null, 4)}`;
+            } else {
+              return `${info.level}: ${info.message}`;
+            }
+          })
         ),
       })
     );
