@@ -5,8 +5,7 @@ import { Timings } from '../../../models/timings.model';
 
 test('timings.chapterFormatToTimings test', (t) => {
   const chapter: BKChapter = {
-    book: 'Genesis',
-    chapter: '1',
+    name: '1',
     audio: {
       filename: 'audio.mp3',
       length: 92700,

@@ -421,9 +421,9 @@ class AppState {
 
   getVideoName(): string {
     // E.g
-    // 'Mark_1.mp4'
-    // 'Mark_1-2-3.mp4'
-    // 'Mark_1-2_Luke_3.mp4'
+    // 'Mii_Mark_1.mp4'
+    // 'Mii_Mark_1-2-3.mp4'
+    // 'Mii_Mark_1-2_Luke_3.mp4'
     const videoType = 'mp4';
     const selection = this.projects.activeProject.selectedBooks
       .map((book) => {

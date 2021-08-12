@@ -5,12 +5,11 @@ import { template } from 'lodash';
 import path from 'path';
 import { record } from './recordFrames';
 import { AnimationSettings } from '../../../models/animationSettings.model';
-import { ProjectData } from '../../../models/projectData.model';
 import { Timings } from '../../../models/timings.model';
 
 export async function render(
   animationSettings: AnimationSettings,
-  projectData: ProjectData,
+  frameDirectory: string,
   timings: Timings,
   notify?: EventEmitter
 ): Promise<void> {
@@ -18,7 +17,7 @@ export async function render(
   const fps = 15;
   const htmlContent = await getHtml(timings, animationSettings, fps);
   const durationInSeconds = timings[timings.length - 1].end / 1000;
-  await record(htmlContent, Math.round(durationInSeconds * fps), projectData.outputLocation, logEachFrame, notify);
+  await record(htmlContent, Math.round(durationInSeconds * fps), frameDirectory, logEachFrame, notify);
 }
 
 export async function getHtml(timings: Timings, animationSettings: AnimationSettings, fps = 15): Promise<string> {
