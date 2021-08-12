@@ -31,39 +31,39 @@ export async function convert(
   };
   const notify = new EventEmitter();
   notify.addListener('rendered', onRenderedProgress);
-  const combineDirectory = tempy.directory();
-  for (const book of project.books) {
-    for (const chapter of book.chapters) {
-      const imagesPath = tempy.directory();
-      const timings: Timings = chapterFormatToTimings(chapter);
-      await render(animationSettings, imagesPath, timings, notify);
+  await tempy.directory.task(async (combineDirectory) => {
+    for (const book of project.books) {
+      for (const chapter of book.chapters) {
+        await tempy.directory.task(async (imagesPath) => {
+          const timings: Timings = chapterFormatToTimings(chapter);
+          await render(animationSettings, imagesPath, timings, notify);
 
-      const outputName = getOutputFilePath(
-        isCombined,
-        combineDirectory,
-        animationSettings.output.directory,
-        project.name,
-        book.name,
-        chapter.name
-      );
-      let audioFiles: string[] = [];
-      if ('filename' in chapter.audio) {
-        audioFiles = [chapter.audio.filename];
-      } else {
-        audioFiles = chapter.audio.files.map((f) => f.filename);
-      }
-      onProgress({ status: 'Combining video frames...', percent });
-      await combineFrames({ audioFiles, imagesPath, framerateIn: 15, outputName });
-      fs.rmdirSync(imagesPath);
-      if (isCombined) {
-        videoPathsToCombine.push(outputName);
+          const outputName = getOutputFilePath(
+            isCombined,
+            combineDirectory,
+            animationSettings.output.directory,
+            project.name,
+            book.name,
+            chapter.name
+          );
+          let audioFiles: string[] = [];
+          if ('filename' in chapter.audio) {
+            audioFiles = [chapter.audio.filename];
+          } else {
+            audioFiles = chapter.audio.files.map((f) => f.filename);
+          }
+          onProgress({ status: 'Combining video frames...', percent });
+          await combineFrames({ audioFiles, imagesPath, framerateIn: 15, outputName });
+          if (isCombined) {
+            videoPathsToCombine.push(outputName);
+          }
+        });
       }
     }
-  }
-  if (videoPathsToCombine.length > 0) {
-    await combineVideos(videoPathsToCombine, outputFilePath);
-  }
-  fs.rmdirSync(combineDirectory);
+    if (videoPathsToCombine.length > 0) {
+      await combineVideos(videoPathsToCombine, outputFilePath);
+    }
+  });
 
   return animationSettings.output.directory;
 }
