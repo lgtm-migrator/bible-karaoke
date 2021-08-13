@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import _ from 'lodash';
 import styled from 'styled-components';
 import { Flex } from 'reflexbox';
-import { Icon, Tooltip, Classes } from '@blueprintjs/core';
+import { Icon, Tooltip, Classes, Position} from '@blueprintjs/core';
 import { useObserver } from 'mobx-react';
 import { repository } from '../../../package.json';
 import { H5, Colors, Text, Card, Button, Checkbox } from '../blueprint';
@@ -12,6 +12,7 @@ import { useStores } from '../store';
 import { useAnalytics } from './Analytics';
 import { getDefaultHearThisDirectory, getDefaultScriptureAppBuilderDirectory } from '../store/Settings';
 import FileSelector from './FileSelector';
+import { DEFAULT_OUTPUT_DIRECTORY } from '../constants';
 
 const DirectoryHeading = styled(Flex)`
   .file-selector > * {
@@ -94,6 +95,7 @@ export default function Settings(): JSX.Element {
   const { settings } = useStores();
   const { analytics } = useAnalytics();
   const repoUrl = repository.url.replace(/\.git$/, '');
+  const resetOutputDir = (): void => settings.setOutputDirectory(DEFAULT_OUTPUT_DIRECTORY);
   React.useEffect(() => {
     analytics.trackScreenview('Settings');
   }, []);
@@ -119,16 +121,21 @@ export default function Settings(): JSX.Element {
         defaultDirectory={defaultAppBuilderDirectory}
       />
       <Card mb={3}>
-        <H5 mb={3}>Output</H5>
-        <FileSelector
-          buttonText="Save videos to..."
-          file={settings.outputDirectory}
-          options={{
-            title: 'Select Output Folder',
-            properties: ['openDirectory'],
-          }}
-          onFileSelected={settings.setOutputDirectory}
-        />
+        <H5 mb={2}>Output</H5>
+        <Flex alignItems="center">
+          <FileSelector
+            buttonText="Save videos to..."
+            file={settings.outputDirectory}
+            options={{
+              title: 'Select Output Folder',
+              properties: ['openDirectory'],
+            }}
+            onFileSelected={settings.setOutputDirectory}
+          />
+          <Tooltip content="Reset to default directory" position={Position.BOTTOM}>
+              <Button minimal icon="reset" onClick={resetOutputDir} />
+          </Tooltip>
+        </Flex>
       </Card>
       <Card mb={3}>
         <Flex alignItems="center" justifyContent="space-between">
