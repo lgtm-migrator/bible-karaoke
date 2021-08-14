@@ -12,11 +12,14 @@ import { ProgressState } from './models/progressState.model';
 import { Verses } from './models/verses.model';
 import SourceIndex from './sources/index';
 import { Project, getSampleVerses } from './sources/util';
+import { prepareLogger } from './cli/lib/commands/logger';
+import winston from 'winston';
 
 let mainWindow: BrowserWindow | undefined;
 
 export async function createWindow(): Promise<void> {
   const isDev = await checkDev();
+  prepareLogger();
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 970,
@@ -44,7 +47,7 @@ export async function createWindow(): Promise<void> {
 
 export function handleGetFonts(): void {
   ipcMain.on('did-start-getfonts', async (event: IpcMainEvent): Promise<void> => {
-    console.log('Getting system fonts');
+    winston.log('info','Getting system fonts');
     try {
       const fonts = await fontList.getFonts();
       event.sender.send(
@@ -61,9 +64,9 @@ export function handleGetFonts(): void {
 export function handleGetSampleVerses(): void {
   ipcMain.on('did-start-getverses', (event: IpcMainEvent, args: Verses): void => {
     const { sourceDirectory } = args;
-    console.log('Getting sample verses', sourceDirectory);
+    winston.log('info','Getting sample verses', sourceDirectory);
     const verses = getSampleVerses(sourceDirectory);
-    console.log('Got sample verses', verses);
+    winston.log('info', 'Got sample verses', verses);
     event.sender.send('did-finish-getverses', verses);
   });
 }
@@ -109,7 +112,7 @@ export function handleSubmission(): void {
       const progress: ProgressState = { status: `${status} ${percent}%`, percent, remainingTime };
       event.sender.send('on-progress', progress);
     };
-    console.log('Starting conversion', args);
+    winston.log('info','Starting conversion', args);
     let response;
     try {
       // ToDo: move this to the frontend and pass a subset of the selected chapters across the IPC.
@@ -126,7 +129,7 @@ export function handleSubmission(): void {
           ? { outputDirectory: response }
           : { error: { name: 'Error', message: response.message, stack: response.stack } };
     }
-    console.log('Conversion process finished', result);
+    winston.log('info','Conversion process finished', result);
     if (result.outputDirectory && fs.existsSync(result.outputDirectory)) {
       shell.openPath(result.outputDirectory);
     }

@@ -1,8 +1,9 @@
-import { join } from 'path';
-import fs from 'fs-extra';
 import { format as dateFormat } from 'date-fns';
-import winston from 'winston';
+import fs from 'fs-extra';
 import os from 'os';
+import { join } from 'path';
+import util from 'util';
+import winston from 'winston';
 import checkDev from '../utility/checkDev';
 
 // Sets up the logger. Should be called when opening the app.
@@ -55,8 +56,7 @@ export async function prepareLogger(numLogsToKeep = 10, pathToLogDir = ''): Prom
     ],
   });
 
-  // If we're not in production then log to the `console` with the format:
-  // `${info.level}: ${info.message} JSON.stringify({ ...rest }) `
+  // If we're not in production then log to the `console`.
   const isDev = await checkDev();
   if (isDev) {
     winston.add(
@@ -69,7 +69,21 @@ export async function prepareLogger(numLogsToKeep = 10, pathToLogDir = ''): Prom
               info: 'cyan',
             },
           }),
-          winston.format.simple()
+          winston.format.printf(({ level, message, service, ...meta }) => {
+            // remove Symbol information
+            const metaWithoutSymbols = Object.keys(meta)
+              .filter((key) => typeof key !== 'symbol')
+              .reduce((obj, key) => {
+                obj[key] = meta[key];
+                return obj;
+              }, {});
+
+            if (Object.keys(metaWithoutSymbols).length > 0) {
+              return `${level}: ${message} ${util.inspect(metaWithoutSymbols, { depth: 3, colors: true })}`;
+            } else {
+              return `${level}: ${message}`;
+            }
+          })
         ),
       })
     );
