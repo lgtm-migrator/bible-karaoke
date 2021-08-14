@@ -9,25 +9,6 @@ import { paths } from '../path-constants';
 
 export async function combineFrames(settings: FfmpegSettings): Promise<void> {
   const executeAudioPath = await combineAudioIfNecessary(settings.audioFiles);
-  
-  // check if output file already exists:
-  var outputName = settings.outputName;
-  if (fs.existsSync(outputName)) {
-    // if they want to keep the file then modify the outputName
-    if (!settings.overwriteOutputFiles) {
-      // get a list of all the files in the directory,
-      var listAllFiles = fs.readdirSync(settings.imagesPath, 'utf8');
-      // get a count of the ones that have a similar start name
-      var nameParts = path.parse(outputName);
-      var matchingFiles = (listAllFiles ??[]).filter((f) => f.indexOf(nameParts.name) == 0);
-      // new name = name[length]
-      outputName = path.join(nameParts.dir,`${nameParts.name} (${matchingFiles.length}).${nameParts.ext}`);
-    } else {
-      // remove the existing file
-      fs.unlinkSync(outputName);
-    }
-  }
-
   //Arguments for ffmpeg
   const args = [
     '-framerate',
@@ -43,7 +24,7 @@ export async function combineFrames(settings: FfmpegSettings): Promise<void> {
   if (settings.framerateOut != null) {
     args.push('-r', settings.framerateOut.toString());
   }
-  args.push('-pix_fmt', 'yuv420p', outputName);
+  args.push('-pix_fmt', 'yuv420p', settings.outputName);
 
   const ffmpegProcess = spawnSync(paths.ffmpeg, args, { stdio: 'pipe' });
 

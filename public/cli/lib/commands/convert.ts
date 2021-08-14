@@ -20,7 +20,7 @@ export async function convert(
 ): Promise<string> {
   // Fix #178: make sure output directory exists
   fs.mkdirSync(animationSettings.output.directory, { recursive: true });
-  const outputFilePath = path.join(animationSettings.output.directory, animationSettings.output.filename);
+  let outputFilePath = path.join(animationSettings.output.directory, animationSettings.output.filename);
   const videoPathsToCombine: string[] = [];
   let percent = 0;
   const onRenderedProgress = ({ currentFrame, totalFrames }: RecordFrameEventData): void => {
@@ -40,7 +40,7 @@ export async function convert(
       const timings: Timings = chapterFormatToTimings(chapter);
       await render(animationSettings, imagesPath, timings, notify);
 
-      const outputName = getOutputFilePath(
+      let outputName = getOutputFilePath(
         isCombined,
         combineDirectory,
         animationSettings.output.directory,
@@ -48,6 +48,9 @@ export async function convert(
         book.name,
         chapter.name
       );
+      if (!isCombined) {
+        outputName = checkOverwrite(outputName, animationSettings.output.overwriteOutputFiles);
+      }
       let audioFiles: string[] = [];
       if ('filename' in chapter.audio) {
         audioFiles = [chapter.audio.filename];
@@ -55,8 +58,7 @@ export async function convert(
         audioFiles = chapter.audio.files.map((f) => f.filename);
       }
       onProgress({ status: 'Combining video frames...', percent });
-      const overwriteOutputFiles = animationSettings.output.overwriteOutputFiles;
-      await combineFrames({ audioFiles, imagesPath, framerateIn: 15, outputName, overwriteOutputFiles });
+      await combineFrames({ audioFiles, imagesPath, framerateIn: 15, outputName });
       if (isCombined) {
         videoPathsToCombine.push(outputName);
       }
@@ -64,11 +66,32 @@ export async function convert(
     }
   }
   if (videoPathsToCombine.length > 0) {
+    outputFilePath = checkOverwrite(outputFilePath, animationSettings.output.overwriteOutputFiles);
     await combineVideos(videoPathsToCombine, outputFilePath);
   }
   cleanupCombineDirectory();
 
   return animationSettings.output.directory;
+}
+
+function checkOverwrite(outputFilePath: string, overwriteOutputFiles: boolean): string {
+  let filePath = outputFilePath;
+  // check if output file already exists:
+  if (fs.existsSync(filePath)) {
+    if (overwriteOutputFiles) {
+      // remove the existing file
+      fs.unlinkSync(filePath);
+    } else {
+      // get a list of all the files in the directory,
+      const listAllFiles = fs.readdirSync(path.dirname(outputFilePath), 'utf8');
+      // get a count of the ones that have a similar start name
+      const nameParts = path.parse(filePath);
+      const matchingFiles = (listAllFiles ?? []).filter((f) => f.startsWith(nameParts.name));
+      // since they want to keep the file then modify the filename - new filename = name (length).ext
+      filePath = path.join(nameParts.dir, `${nameParts.name} (${matchingFiles.length})${nameParts.ext}`);
+    }
+  }
+  return filePath;
 }
 
 let lastCurrentFrame = 0;

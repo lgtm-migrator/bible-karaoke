@@ -56,6 +56,7 @@ function mockStyle(): AnimationSettings {
     output: {
       directory: '',
       filename: '',
+      overwriteOutputFiles: true,
     },
     textLocation: {
       location: 'center',
