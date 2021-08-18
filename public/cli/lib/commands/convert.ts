@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 import fs from 'fs';
 import path from 'path';
-import tempy from 'tempy';
+import tmp from 'tmp-promise';
 import { AnimationSettings } from '../../../models/animationSettings.model';
 import { ProgressState } from '../../../models/progressState.model';
 import { BKProject } from '../../../models/projectFormat.model';
@@ -31,39 +31,41 @@ export async function convert(
   };
   const notify = new EventEmitter();
   notify.addListener('rendered', onRenderedProgress);
-  await tempy.directory.task(async (combineDirectory) => {
-    for (const book of project.books) {
-      for (const chapter of book.chapters) {
-        await tempy.directory.task(async (imagesPath) => {
-          const timings: Timings = chapterFormatToTimings(chapter);
-          await render(animationSettings, imagesPath, timings, notify);
+  tmp.setGracefulCleanup();
+  const { path: combineDirectory, cleanup: cleanupCombineDirectory } = await tmp.dir({ unsafeCleanup: true });
+  for (const book of project.books) {
+    for (const chapter of book.chapters) {
+      const { path: imagesPath, cleanup: cleanupImagesPath } = await tmp.dir({ unsafeCleanup: true });
 
-          const outputName = getOutputFilePath(
-            isCombined,
-            combineDirectory,
-            animationSettings.output.directory,
-            project.name,
-            book.name,
-            chapter.name
-          );
-          let audioFiles: string[] = [];
-          if ('filename' in chapter.audio) {
-            audioFiles = [chapter.audio.filename];
-          } else {
-            audioFiles = chapter.audio.files.map((f) => f.filename);
-          }
-          onProgress({ status: 'Combining video frames...', percent });
-          await combineFrames({ audioFiles, imagesPath, framerateIn: 15, outputName });
-          if (isCombined) {
-            videoPathsToCombine.push(outputName);
-          }
-        });
+      const timings: Timings = chapterFormatToTimings(chapter);
+      await render(animationSettings, imagesPath, timings, notify);
+
+      const outputName = getOutputFilePath(
+        isCombined,
+        combineDirectory,
+        animationSettings.output.directory,
+        project.name,
+        book.name,
+        chapter.name
+      );
+      let audioFiles: string[] = [];
+      if ('filename' in chapter.audio) {
+        audioFiles = [chapter.audio.filename];
+      } else {
+        audioFiles = chapter.audio.files.map((f) => f.filename);
       }
+      onProgress({ status: 'Combining video frames...', percent });
+      await combineFrames({ audioFiles, imagesPath, framerateIn: 15, outputName });
+      if (isCombined) {
+        videoPathsToCombine.push(outputName);
+      }
+      cleanupImagesPath();
     }
-    if (videoPathsToCombine.length > 0) {
-      await combineVideos(videoPathsToCombine, outputFilePath);
-    }
-  });
+  }
+  if (videoPathsToCombine.length > 0) {
+    await combineVideos(videoPathsToCombine, outputFilePath);
+  }
+  cleanupCombineDirectory();
 
   return animationSettings.output.directory;
 }

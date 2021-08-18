@@ -1,8 +1,9 @@
-import fs from 'fs';
-import shell from 'shelljs';
 import { spawnSync } from 'child_process';
-import tempy from 'tempy';
+import fs from 'fs';
 import path from 'path';
+import shell from 'shelljs';
+import tmp from 'tmp-promise';
+import winston from 'winston';
 import { FfmpegSettings } from '../../../models/ffmpegSettings.model';
 import { paths } from '../path-constants';
 
@@ -30,6 +31,7 @@ export async function combineFrames(settings: FfmpegSettings): Promise<void> {
   //Check for errors running ffmpeg
   const stderr = ffmpegProcess.stderr.toString();
   if (stderr !== '') {
+    winston.error(stderr);
     throw new Error(stderr);
   }
 }
@@ -45,9 +47,11 @@ export async function combineAudioIfNecessary(audioFiles: string[]): Promise<str
 
     if (mp3Files.length + wavFiles.length !== audioFiles.length) {
       // if there are more then just wav and mp3 files, then throw error
+      winston.error('Unsupported audio types');
       throw new Error('Unsupported audio types');
     } else if (mp3Files.length > 0 && wavFiles.length > 0) {
       // if there are a combination of wav and mp3 files, then throw error
+      winston.error('Conflicting audio types');
       throw new Error('Conflicting audio types');
     } else if (wavFiles.length > 0) {
       // if we have wav files, then we merge them into one file and return the combined file path
@@ -65,12 +69,12 @@ export async function combineAudioIfNecessary(audioFiles: string[]): Promise<str
  * for more information.
  */
 export async function mergeWavFiles(wavFiles: string[]): Promise<string> {
+  const { path: directory } = await tmp.dir();
   return new Promise<string>((resolve, reject) => {
     // NOTE: cannot use glob format with .wav files
     // we will combine them into a single file and use that in our encode.
-
-    const combinedWavFilePath = path.join(tempy.directory(), 'bbkAudio.wav');
-    const fileDir = path.join(path.dirname(combinedWavFilePath), 'listAudioFiles.txt');
+    const combinedWavFilePath = path.join(directory, 'bbkAudio.wav');
+    const fileDir = path.join(directory, 'listAudioFiles.txt');
 
     // write a list of wav file to prepare to combine
     let fileText = '';

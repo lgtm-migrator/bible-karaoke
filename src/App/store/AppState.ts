@@ -269,7 +269,7 @@ export class Progress {
       if (args.outputDirectory) {
         this.finish();
       } else {
-        this.setError(args.error);
+        this.setError(args.error.message);
       }
     });
   }
