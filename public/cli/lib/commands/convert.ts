@@ -74,7 +74,7 @@ export async function convert(
   return animationSettings.output.directory;
 }
 
-function checkOverwrite(outputFilePath: string, overwriteOutputFiles: boolean): string {
+export function checkOverwrite(outputFilePath: string, overwriteOutputFiles: boolean): string {
   let filePath = outputFilePath;
   // check if output file already exists:
   if (fs.existsSync(filePath)) {
@@ -86,9 +86,16 @@ function checkOverwrite(outputFilePath: string, overwriteOutputFiles: boolean): 
       const listAllFiles = fs.readdirSync(path.dirname(outputFilePath), 'utf8');
       // get a count of the ones that have a similar start name
       const nameParts = path.parse(filePath);
-      const matchingFiles = (listAllFiles ?? []).filter((f) => f.startsWith(nameParts.name));
-      // since they want to keep the file then modify the filename - new filename = name (length).ext
-      filePath = path.join(nameParts.dir, `${nameParts.name} (${matchingFiles.length})${nameParts.ext}`);
+      const copyFilenamePattern = new RegExp(`^${nameParts.name} \\((\\d+)\\)${nameParts.ext}$`, 'm');
+      const copyFilenames = (listAllFiles ?? [])
+        .filter((f) => f !== nameParts.base && f.match(copyFilenamePattern))
+        .sort();
+      const highestFilename = copyFilenames.reverse()[0] ?? '';
+      //parse copy count from filename
+      const highestFilenameCopyCount = parseInt((highestFilename.match(copyFilenamePattern) ?? [])[1] ?? 0);
+      const copyCount = highestFilenameCopyCount + 1;
+      // since they want to keep the file then modify the filename - new filename = name (copyCount).ext
+      filePath = path.join(nameParts.dir, `${nameParts.name} (${copyCount})${nameParts.ext}`);
     }
   }
   return filePath;
