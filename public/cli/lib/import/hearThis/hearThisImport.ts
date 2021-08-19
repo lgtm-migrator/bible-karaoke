@@ -1,7 +1,8 @@
+import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import winston from 'winston';
 import { xml2json } from 'xml-js';
-import { spawnSync } from 'child_process';
 import { paths } from '../../path-constants';
 import { BKProject, BKChapter } from '../../../../models/projectFormat.model';
 import { ConvertProject, ConvertBook, ConvertChapter } from '../../../../models/convertFormat.model';
@@ -86,6 +87,7 @@ async function getAudioDurationInMilliseconds(filePath: string): Promise<number>
   if (matched && matched[1]) {
     return parseFloat(matched[1]) * 1000;
   } else {
+    winston.error('No duration found!');
     throw new Error('No duration found!');
   }
 }
