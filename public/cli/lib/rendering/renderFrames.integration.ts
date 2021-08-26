@@ -38,7 +38,7 @@ const animationSettings: AnimationSettings = {
     rgba: '',
     opacity: 80,
   },
-  output: { directory: '', filename: '' },
+  output: { directory: '', filename: '', overwriteOutputFiles: true },
   textLocation: { location: 'center' },
 };
 

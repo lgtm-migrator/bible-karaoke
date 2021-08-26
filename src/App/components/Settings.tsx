@@ -121,8 +121,8 @@ export default function Settings(): JSX.Element {
         defaultDirectory={defaultAppBuilderDirectory}
       />
       <Card mb={3}>
-        <H5 mb={2}>Output</H5>
-        <Flex alignItems="center">
+        <H5 mb={3}>Output</H5>
+        <Flex mb={3} alignItems="center">
           <FileSelector
             buttonText="Save videos to..."
             file={settings.outputDirectory}
@@ -136,6 +136,13 @@ export default function Settings(): JSX.Element {
               <Button minimal icon="reset" onClick={resetOutputDir} />
           </Tooltip>
         </Flex>
+        <Checkbox
+          checked={settings.overwriteOutputFiles}
+          onChange={(event): void => {
+            settings.setOverwriteFile(event.currentTarget.checked);
+          }}
+          label="Overwrite existing files"
+        />
       </Card>
       <Card mb={3}>
         <Flex alignItems="center" justifyContent="space-between">
