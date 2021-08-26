@@ -8,7 +8,7 @@ import { BKProject, BKChapter } from '../../../../models/projectFormat.model';
 import { ConvertProject, ConvertBook, ConvertChapter } from '../../../../models/convertFormat.model';
 
 //Defines a ScriptLine as expected after parsing the hearthis xml
-interface ScriptLine {
+export interface ScriptLine {
   LineNumber: { _text: string };
   Text: { _text: string };
   RecordingTime: { _text: string };
@@ -39,7 +39,7 @@ async function convertChapter(chapter: ConvertChapter, book: ConvertBook, projec
   let chapterAudioLength = 0;
   for await (const scriptLine of chapterInfo.ChapterInfo.Recordings.ScriptLine as ScriptLine[]) {
     // Fix #20 : ignore Chapter Headings
-    if (scriptLine.HeadingType != null && scriptLine.HeadingType._text == 'c') {
+    if (scriptLine.HeadingType?._text === 'c' && scriptLine.Verse._text === '0') {
       continue;
     }
 
