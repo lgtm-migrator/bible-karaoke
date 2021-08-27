@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import xml2json from 'xml-js';
+import { ScriptLine } from '../cli/lib/import/hearThis/hearThisImport';
 
 export function isDirectory(source: string): boolean {
   return fs.lstatSync(source).isDirectory();
@@ -52,9 +53,14 @@ export function getSampleVerses(sourceDirectory: string): string[] {
   try {
     const info = fs.readFileSync(path.join(sourceDirectory, 'info.xml'), 'utf8');
     const jsonInfo = JSON.parse(xml2json.xml2json(info, { compact: true }));
-    let verses = jsonInfo.ChapterInfo.Recordings.ScriptLine.slice(0, 4).map((line: any): string => {
+    let scriptLines = jsonInfo.ChapterInfo.Recordings.ScriptLine;
+    // make sure ScriptLine is an array
+    if (!Array.isArray(scriptLines)) {
+      scriptLines = [scriptLines];
+    }
+    let verses = (scriptLines as ScriptLine[]).slice(0, 4).map((line: ScriptLine): string => {
       // Fix #20 : ignore Chapter Headings
-      if (line.HeadingType && line.HeadingType._text == 'c') {
+      if (line.HeadingType?._text === 'c' && line.Verse._text === '0') {
         return '';
       }
       let text = line.Text._text;
@@ -63,7 +69,7 @@ export function getSampleVerses(sourceDirectory: string): string[] {
       }
       return text;
     });
-    // use .filter() to remove any undefined elements
+    // remove any undefined or empty elements
     verses = verses.filter((v: string) => v);
     // only return 3
     if (verses.length > 3) verses.pop();
