@@ -12,6 +12,7 @@ import { TEXT_LOCATION } from '../constants';
 import { BackgroundEditor, FontEditor, SpeechBubbleEditor } from './Editors';
 import TextLocationToggle from './TextLocationToggle';
 import AnimatedVisibility from './AnimatedVisibility';
+import { BackgroundSettings } from '../../../public/models/animationSettings.model';
 
 const PREVIEW_WIDTH = '720px';
 const PREVIEW_HEIGHT = '480px';
@@ -32,6 +33,7 @@ const Background = styled(Editable)`
 const PreviewVideo = styled.video.attrs({
   loop: true,
   autoPlay: true,
+  muted: true,
   width: PREVIEW_WIDTH,
   height: PREVIEW_HEIGHT,
 })`
@@ -89,7 +91,7 @@ const getImageSrc = _.memoize((file: string): string => {
   }
   try {
     const ext: string = file.split('.').pop() || '';
-    if (['png', 'jpg', 'jpeg', 'gif'].includes(ext)) {
+    if (['png', 'jpg', 'jpeg', 'gif'].includes(ext.toLowerCase())) {
       const img = fs.readFileSync(file).toString('base64');
       return `url(data:image/${ext};base64,${img})`;
     }
@@ -111,6 +113,21 @@ const PreviewVerse = (prop: { verse: string; highlightVerse: boolean; highlightC
       </React.Fragment>
     );
   })}</>;
+};
+
+const getViewBlob = (background: BackgroundSettings): string => {
+  if (!background.file) {
+    return "";
+  }
+  const URL = window.URL || window.webkitURL;
+  let video = null;
+  try {
+    video = fs.readFileSync(background.file);
+    const fileURL = URL.createObjectURL(new Blob([video], { "type": "video/mp4" }));
+    return fileURL;
+  } catch (err) {
+    return "";
+  }
 };
 
 const Preview = (): JSX.Element => {
@@ -145,7 +162,7 @@ const Preview = (): JSX.Element => {
       }
     };
 
-    const file: string = 'file:' + background.file;
+    const file: string = getViewBlob(background);
     const versesClassName: string = classnames({
       subtitle: textLocation.location === TEXT_LOCATION.subtitle,
     });

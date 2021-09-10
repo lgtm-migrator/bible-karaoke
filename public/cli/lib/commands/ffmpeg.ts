@@ -8,21 +8,41 @@ import { paths } from '../path-constants';
 
 export async function combineFrames(settings: FfmpegSettings): Promise<void> {
   const executeAudioPath = await combineAudioIfNecessary(settings.audioFiles);
-  //Arguments for ffmpeg
-  const args = [
-    '-framerate',
-    settings.framerateIn.toString(),
-    '-loglevel',
-    'error',
-    '-i',
-    path.join(settings.imagesPath, 'frame_%06d.png'),
-  ];
+
+  const args = ['-v', 'error'];
+
+  if (settings.backgroundUrl) {
+    if (settings.backgroundType === 'image') {
+      args.push('-framerate', settings.framerateIn.toString());
+    }
+    args.push('-stream_loop', '-1', '-t', settings.audioDuration.toString(), '-i', settings.backgroundUrl);
+  }
+
+  args.push('-framerate', settings.framerateIn.toString(), '-i', path.join(settings.imagesPath, 'frame_%06d.png'));
+
   if (executeAudioPath != null) {
     args.push('-i', executeAudioPath);
   }
+
+  // combine background image/video with bkframes
+  if (settings.backgroundType === 'image' || settings.backgroundType === 'video') {
+    args.push(
+      '-filter_complex',
+      '[0:v] scale=round(iw*max(720/iw\\,480/ih)):round(ih*max(720/iw\\,480/ih)), crop=720:480 [crop]; [crop][1:v] overlay [layered]',
+      '-map',
+      '[layered]'
+    );
+    if (executeAudioPath != null) {
+      args.push('-map', '2:a');
+    }
+    args.push('-c:v', 'libx264');
+    args.push('-shortest');
+  }
+
   if (settings.framerateOut != null) {
     args.push('-r', settings.framerateOut.toString());
   }
+
   args.push('-pix_fmt', 'yuv420p', settings.outputName);
 
   const ffmpegProcess = spawnSync(paths.ffmpeg, args, { stdio: 'pipe' });

@@ -24,10 +24,13 @@ test('ffmpeg combineFrames creates video', async (t) => {
       path.join(testPaths.exampleHearThisProjectPath, 'Book1', '1', '1.wav'),
       path.join(testPaths.exampleHearThisProjectPath, 'Book1', '1', '2.wav'),
     ],
+    audioDuration: 9,
     imagesPath: testPaths.frameImages,
     framerateIn: 15,
     framerateOut: 15,
     outputName: path.join(directory, 'test.mp4'),
+    backgroundType: 'color',
+    backgroundUrl: '',
   };
 
   await combineFrames(ffmpegSettings);

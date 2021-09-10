@@ -20,7 +20,7 @@ export const TEXT_LOCATION = {
   center: 'center',
 };
 
-export const DEFAULT_OUTPUT_DIRECTORY = (function(): string {
+export const DEFAULT_OUTPUT_DIRECTORY = (function (): string {
   const BK_DIR_NAME = 'Bible Karaoke Videos';
   switch (process.platform) {
     case 'win32': {
@@ -28,8 +28,7 @@ export const DEFAULT_OUTPUT_DIRECTORY = (function(): string {
       // if windows 7
       if (/^6\.1/.test(version)) {
         return path.join(os.homedir(), 'My Videos', BK_DIR_NAME);
-      }
-      else {
+      } else {
         return path.join(os.homedir(), 'Videos', BK_DIR_NAME);
       }
     }
@@ -71,7 +70,7 @@ export const fileFilters = {
   background: [
     {
       name: 'Background files',
-      extensions: ['jpg', 'png' /*, 'mpeg4', 'mp4', 'webm' */],
+      extensions: ['jpg', 'png', 'mp4', 'webm', 'mov'],
     },
   ],
   output: [
