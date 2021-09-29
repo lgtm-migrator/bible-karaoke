@@ -1,4 +1,3 @@
-import { ipcRenderer } from "electron";
 import React from "react";
 import { useObserver } from "mobx-react";
 import styled, { StyledComponent } from "styled-components";
@@ -23,12 +22,15 @@ export default function App(): JSX.Element {
   const analyticsContext: AnalyticsContext = useAnalytics();
 
   React.useEffect((): void => {
-    ipcRenderer.send("did-start-getprojectstructure", storeRecord.settings.rootDirectories);
+    window.ipc.send("did-start-getprojectstructure", storeRecord.settings.rootDirectories);
   }, [storeRecord.settings.rootDirectories]);
 
   React.useEffect((): void => {
     analyticsContext.analytics.trackScreenview("Home");
   }, [analyticsContext]);
+
+  // **DEBUG** only
+  window.ipc.sendMessage("START-UP");
 
   return useObserver(() => (
     <AppWrapper

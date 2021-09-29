@@ -9,11 +9,13 @@ import {
   SaveDialogOptions,
   dialog,
   OpenDialogOptions,
+  session,
 } from 'electron';
 import { getAssetURL } from 'electron-snowpack';
 import fontList from 'font-list';
 import fs from 'fs';
 import { map, flatten } from 'lodash';
+import path from 'path';
 import winston from 'winston';
 import { convert } from './commands/convert';
 import { prepareLogger } from './commands/logger';
@@ -30,10 +32,29 @@ let mainWindow: BrowserWindow | undefined;
 
 export function createWindow(): void {
   prepareLogger();
+
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "connect-src 'self' ws:",
+          isDev() ? "script-src 'self' data: 'unsafe-eval' 'unsafe-inline'" : "script-src 'self'",
+        ],
+      },
+    });
+  });
+
   mainWindow = new BrowserWindow({
     width: 1100,
     height: 970,
-    webPreferences: { nodeIntegration: true, webSecurity: true, enableRemoteModule: false },
+    webPreferences: {
+      nodeIntegration: false,
+      webSecurity: true,
+      enableRemoteModule: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
   });
   mainWindow.loadURL(getAssetURL('index.html'));
   if (isDev()) {
@@ -178,6 +199,10 @@ app.on('ready', (): void => {
   handleGetSampleVerses();
   handleGetFonts();
   handleFileDialogs();
+  // **DEBUG** only
+  ipcMain.on('message', (_, message) => {
+    console.log(message);
+  });
 });
 
 app.on('window-all-closed', (): void => {

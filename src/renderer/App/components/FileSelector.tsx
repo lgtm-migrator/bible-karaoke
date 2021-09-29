@@ -1,5 +1,4 @@
 import { Button, IconName, MaybeElement } from "@blueprintjs/core";
-import { ipcRenderer } from "electron";
 import PropTypes from "prop-types";
 import React from "react";
 import "./FileSelector.scss";
@@ -16,20 +15,20 @@ const FileSelector = (prop: {
 }): JSX.Element => {
   const selectFile = async (): Promise<void> => {
     if (prop.save) {
-      ipcRenderer.on("did-finish-file-save-dialog", (_, saveFilePath) => {
+      window.ipc.on("did-finish-file-save-dialog", (_event: Event, saveFilePath: string) => {
         if (saveFilePath) {
           prop.onFileSelected(saveFilePath);
         }
       });
-      ipcRenderer.send("did-start-file-save-dialog", prop.options as SaveDialogOptions);
+      window.ipc.send("did-start-file-save-dialog", prop.options as SaveDialogOptions);
     } else {
-      ipcRenderer.on("did-finish-file-open-dialog", (_, openFilePaths) => {
+      window.ipc.on("did-finish-file-open-dialog", (_event: Event, openFilePaths: string[]) => {
         const openFilePath = openFilePaths && openFilePaths.length === 1 ? openFilePaths[0] : "";
         if (openFilePath) {
           prop.onFileSelected(openFilePath);
         }
       });
-      ipcRenderer.send("did-start-file-open-dialog", prop.options as OpenDialogOptions);
+      window.ipc.send("did-start-file-open-dialog", prop.options as OpenDialogOptions);
     }
   };
   return (

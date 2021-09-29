@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron';
 import { observable, computed, action, reaction, toJS } from 'mobx';
 import { persist } from 'mobx-persist';
 import _ from 'lodash';
@@ -212,7 +211,7 @@ class Project {
 
 class ProjectList {
   constructor() {
-    ipcRenderer.on('did-finish-getprojectstructure', (_event: Event, projects: Project[]) => {
+    window.ipc.on('did-finish-getprojectstructure', (_event: Event, projects: Project[]) => {
       this.setProjects(projects);
     });
   }
@@ -265,10 +264,10 @@ class ProjectList {
 
 export class Progress {
   constructor() {
-    ipcRenderer.on('on-progress', (_event: Event, progress: ProgressState) => {
+    window.ipc.on('on-progress', (_event: Event, progress: ProgressState) => {
       this.setProgress(progress);
     });
-    ipcRenderer.on('did-finish-conversion', (_event: Event, args: any) => {
+    window.ipc.on('did-finish-conversion', (_event: Event, args: any) => {
       if (args.outputDirectory) {
         this.finish();
       } else {
@@ -298,7 +297,7 @@ export class Progress {
   @action.bound
   start(args: any): void {
     console.log('Requesting processing', args);
-    ipcRenderer.send('did-start-conversion', args);
+    window.ipc.send('did-start-conversion', args);
     this.combined = args.combined;
     this.error = '';
     this.status = 'Getting things started...';
@@ -346,7 +345,7 @@ class AppState {
   constructor(root: Store) {
     this.root = root;
     this.timingFile = '';
-    ipcRenderer.on('did-finish-getverses', (_event: Event, verses: string[]) => {
+    window.ipc.on('did-finish-getverses', (_event: Event, verses: string[]) => {
       if (Array.isArray(verses) && verses.length) {
         this.setVerses(verses);
       } else {
@@ -357,7 +356,7 @@ class AppState {
       () => this.projects.firstSelectedChapter,
       (firstSelectedChapter) => {
         if (firstSelectedChapter) {
-          ipcRenderer.send('did-start-getverses', {
+          window.ipc.send('did-start-getverses', {
             sourceDirectory: firstSelectedChapter.fullPath, // TODO: verses.model.ts
           });
         } else {
