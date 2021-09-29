@@ -1,13 +1,23 @@
 {
-  "extends": "./tsconfig.spec.json",
+  "extends": "electron-snowpack/config/tsconfig.json",
   "compilerOptions": {
     "module": "esnext",
+    "target": "esnext",
+    "lib": ["dom", "es2019", "es2020.promise", "es2020.bigint", "es2020.string"],
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "outDir": "start",
+    "allowSyntheticDefaultImports": true,
+    "downlevelIteration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "preserveConstEnums": true,
+    "strict": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "jsx": "preserve",
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
     "noEmit": true
   },
-  "include": ["public/*.ts", "public/**/*.ts", "typings"],
+  "include": ["src", "typings"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.integration.ts"]
 }
