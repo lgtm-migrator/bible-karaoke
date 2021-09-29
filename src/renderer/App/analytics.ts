@@ -1,6 +1,5 @@
 import GoogleAnalytics, { resetClientId } from 'electron-ga-uuid';
 import { reaction } from 'mobx';
-import packageData from '../../../package.json';
 import { AnalyticsInterface } from '../../main/models/analytic.model';
 import isDev from '../../utility/isDev';
 
@@ -14,8 +13,8 @@ export default class Analytics implements AnalyticsInterface {
       this.isEnabled = !isDev() && enableAnalytics;
       if (this.isEnabled) {
         this.ga = new GoogleAnalytics(isDev() ? DEV_TRACK_ID : TRACK_ID, {
-          appName: packageData.name,
-          appVersion: packageData.version,
+          appName: process.env.APP_NAME,
+          appVersion: process.env.APP_VERSION,
         });
       }
     };

@@ -6,7 +6,6 @@ import styled from "styled-components";
 import { Flex } from "reflexbox";
 import { Icon, Tooltip, Classes, Position } from "@blueprintjs/core";
 import { useObserver } from "mobx-react";
-import { repository } from "../../../../package.json";
 import { H5, Colors, Text, Card, Button, Checkbox } from "../blueprint";
 import { useStores } from "../store";
 import { useAnalytics } from "./Analytics";
@@ -95,7 +94,7 @@ DirectoriesCard.propTypes = {
 export default function Settings(): JSX.Element {
   const { settings } = useStores();
   const { analytics } = useAnalytics();
-  const repoUrl = repository.url.replace(/\.git$/, "");
+  const repoUrl = (process.env.REPOSITORY_URL || "").replace(/\.git$/, "");
   const resetOutputDir = (): void => settings.setOutputDirectory(DEFAULT_OUTPUT_DIRECTORY);
   React.useEffect(() => {
     analytics.trackScreenview("Settings");
