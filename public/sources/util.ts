@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import xml2json from 'xml-js';
 import { ScriptLine } from '../cli/lib/import/hearThis/hearThisImport';
+import { fileFilters } from '../../src/App/constants';
+import { DEFAULT_HEARTHIS_XML_FILE } from './hear-this';
 
 export function isDirectory(source: string): boolean {
   return fs.lstatSync(source).isDirectory();
@@ -92,10 +94,10 @@ export function sortInCanonicalOrder(bookNames: string[]): string[] {
     '3 John',
     'Jude',
     'Revelation',
-    'Apocalypse'
+    'Apocalypse',
   ];
   const sortedBooks: string[] = [];
-  CANONICAL_BOOK_ORDER.forEach(book => {
+  CANONICAL_BOOK_ORDER.forEach((book) => {
     const index = bookNames.indexOf(book);
     if (index >= 0) {
       // move bookName from bookNames into sortedBooks
@@ -105,7 +107,6 @@ export function sortInCanonicalOrder(bookNames: string[]): string[] {
   // append unrecognised books to the end
   return sortedBooks.concat(bookNames);
 }
-
 
 export class Project {
   projectType: string;
@@ -149,11 +150,16 @@ export function getSampleVerses(sourceDirectory: string): string[] {
   try {
     const info = fs.readFileSync(path.join(sourceDirectory, 'info.xml'), 'utf8');
     const jsonInfo = JSON.parse(xml2json.xml2json(info, { compact: true }));
+    const audioIndexes = filePathToAudioIndexes(sourceDirectory);
     let scriptLines = jsonInfo.ChapterInfo.Recordings.ScriptLine;
     // make sure ScriptLine is an array
     if (!Array.isArray(scriptLines)) {
       scriptLines = [scriptLines];
     }
+    // filter scriptLines to only those that have corresponding audio
+    scriptLines = scriptLines.filter((line: ScriptLine) =>
+      audioIndexes.includes((parseInt(line.LineNumber._text) - 1).toString())
+    );
     let verses = (scriptLines as ScriptLine[]).slice(0, 4).map((line: ScriptLine): string => {
       // Fix #20 : ignore Chapter Headings
       if (line.HeadingType?._text === 'c' && line.Verse._text === '0') {
@@ -173,5 +179,25 @@ export function getSampleVerses(sourceDirectory: string): string[] {
   } catch (err) {
     console.error('Failed to get sample verses', err);
     return ['Failed to get sample verses'];
+  }
+}
+
+function filePathToAudioIndexes(sourceDirectory: string): string[] {
+  const indexes = [];
+  const directoryFileList = fs.readdirSync(sourceDirectory, 'utf8');
+  const audioFileList = directoryFileList.filter((audioFile) =>
+    isValidAudioFile(audioFile, DEFAULT_HEARTHIS_XML_FILE, fileFilters.audio[0].extensions)
+  );
+  for (const file of audioFileList) {
+    indexes.push(path.parse(file).name);
+  }
+  return indexes;
+}
+
+export function isValidAudioFile(file: string, defaultXmlName: string, audioExtensions: string[]): boolean {
+  if (file !== defaultXmlName) {
+    return audioExtensions.some((ext: string) => file.endsWith(`.${ext}`));
+  } else {
+    return false;
   }
 }

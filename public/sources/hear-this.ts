@@ -3,10 +3,12 @@ import path from 'path';
 import { flatten } from 'lodash';
 import { Project, Book, Chapter, getDirectories, sortInCanonicalOrder } from './util';
 import ProjectSource from '../models/projectSource.model';
+import { fileFilters } from '../../src/App/constants';
+import { isValidAudioFile } from './util';
 
 const PROJECT_TYPE = 'hearThis';
 
-const DEFAULT_XML_NAME = 'info.xml';
+export const DEFAULT_HEARTHIS_XML_FILE = 'info.xml';
 
 class HearThis implements ProjectSource {
   get PROJECT_TYPE(): string {
@@ -57,10 +59,10 @@ class HearThis implements ProjectSource {
     chapter.name = parseInt(name).toString();
     const chapterFiles = fs.readdirSync(path.join(directory, projectName, bookName, name));
     chapter.audioFiles = chapterFiles
-      .filter((file: string) => file !== DEFAULT_XML_NAME)
+      .filter((file: string) => isValidAudioFile(file, DEFAULT_HEARTHIS_XML_FILE, fileFilters.audio[0].extensions))
       .map((fileName: string) => path.join(directory, projectName, bookName, name, fileName));
 
-    chapter.textXmlFile = chapterFiles.find((file: string) => file === DEFAULT_XML_NAME);
+    chapter.textXmlFile = chapterFiles.find((file: string) => file === DEFAULT_HEARTHIS_XML_FILE);
     if (chapter.textXmlFile)
       chapter.textXmlFile = path.join(directory, projectName, bookName, name, chapter.textXmlFile);
     chapter.fullPath = path.join(directory, projectName, bookName, name);
