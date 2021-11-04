@@ -6,6 +6,25 @@
 - :thumbsup: Improvement
 - :boom: Bug fix
 
+## v1.0.0
+
+This is a major feature and bugfix release:
+
+- :star: New user interface makes it much easier to use, including:
+  - Render multiple chapters at one time as one video or a separate video for each chapter
+  - New Settings pane (gear icon)
+    - HearThis project folder location
+    - Output folder location and whether to overwrite existing files
+    - Google Analytics reset and opt out
+- :thumbsup: It no longer renders blocks of text that are marked as "skipped" in HearThis
+- :boom: Books are now displayed in canonical order
+
+## v0.3.6
+
+This is a minor feature and bugfix release:
+
+- :star: Use a video for the background instead of an image
+
 ## v0.3.5
 
 This is a minor feature and bugfix release:
