@@ -6,6 +6,12 @@
 - :thumbsup: Improvement
 - :boom: Bug fix
 
+## v1.0.1
+
+This is a bugfix release:
+
+- :boom: The maximize button is now working and the window can be resized
+
 ## v1.0.0
 
 This is a major feature and bugfix release:

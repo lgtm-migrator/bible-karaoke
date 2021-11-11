@@ -10,7 +10,7 @@
     "email": "info@digiserve.org",
     "url": "https://digiserve.org"
   },
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "main": "build/main/electron.js",
   "scripts": {
