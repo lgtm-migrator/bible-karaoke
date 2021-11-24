@@ -2,7 +2,8 @@ import { Popover } from "@blueprintjs/core";
 import PropTypes from "prop-types";
 import React from "react";
 import { Color, ColorChangeHandler, ColorResult, SketchPicker } from "react-color";
-import { Box } from "reflexbox";
+import { PresetColor } from "react-color/lib/components/sketch/Sketch";
+import { Box, BoxProps } from "reflexbox";
 import styled from "styled-components";
 
 const SWATCH_COLORS = [
@@ -32,48 +33,50 @@ const SWATCH_COLORS = [
   "#000000",
 ];
 
+interface SwatchProps extends BoxProps {
+  disabled?: boolean;
+}
+
 const Swatch = styled(Box).attrs({
   width: 30,
   height: 30,
   borderRadius: 4,
 })`
   border: solid grey 1px;
-  ${(props: { disabled: boolean }): string => {
+  ${(props: SwatchProps): string => {
     return props.disabled ? "cursor: not-allowed;" : "";
   }}
 `;
 
-interface ColorPickerSettings {
+interface ColorPickerProps extends SwatchProps {
   value?: Color;
-  presetColors?: { color: string; title: string }[] | string[];
+  presetColors?: PresetColor[];
   disableAlpha?: boolean;
-  disabled?: boolean;
   onChange?: ColorChangeHandler;
-  props?: any;
 }
 
-export default class ColorPicker extends React.Component<ColorPickerSettings> {
-  constructor(props: ColorPickerSettings) {
-    super(props);
-
-    this.defaultOnChange = this.defaultOnChange.bind(this);
-  }
-
-  defaultOnChange(color: ColorResult): void {
+export default class ColorPicker extends React.Component<ColorPickerProps> {
+  defaultOnChange = (color: ColorResult): void => {
     this.setState({ color: color.rgb });
-  }
+  };
 
-  get propTypes(): any {
+  get propTypes(): {
+    value?: PropTypes.Requireable<string | object>;
+    presetColors?: PropTypes.Requireable<(string | object | null | undefined)[]>;
+    disableAlpha?: PropTypes.Requireable<boolean>;
+    disabled?: PropTypes.Requireable<boolean>;
+    onChange?: PropTypes.Requireable<ColorChangeHandler>;
+  } {
     return {
-      value: PropTypes.string,
-      presetColors: PropTypes.arrayOf(PropTypes.string),
+      value: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
+      presetColors: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.object, PropTypes.string])),
       disableAlpha: PropTypes.bool,
       disabled: PropTypes.bool,
       onChange: PropTypes.func,
     };
   }
 
-  get defaultProps(): any {
+  get defaultProps(): { color?: string; presetColors: string[]; disableAlpha: boolean } {
     return {
       color: undefined,
       presetColors: SWATCH_COLORS,
@@ -85,8 +88,7 @@ export default class ColorPicker extends React.Component<ColorPickerSettings> {
     return (
       <Popover disabled={this.props.disabled}>
         <Swatch
-          {...this.props.props}
-          bg={this.props.disabled ? undefined : this.props.value}
+          backgroundColor={this.props.disabled ? undefined : (this.props.value as string)}
           disabled={this.props.disabled}
         />
         <SketchPicker

@@ -6,18 +6,14 @@ import { ColorResult } from "react-color";
 import { HTMLSelect, Text, Button, ButtonGroup } from "../../blueprint";
 import { useStores } from "../../store";
 import ColorPicker from "../ColorPicker";
-import EditPopover, { EditRow } from "./EditPopover";
+import EditPopover, { EditRow, EditPopoverProps } from "./EditPopover";
 
 const FONT_SIZES = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].map((n) => ({
   value: n,
   label: `${n}pt`,
 }));
 
-interface HTMLSelectValueElement extends HTMLSelectElement {
-  value: any;
-}
-
-export default function FontEditor(props: any): JSX.Element {
+export default function FontEditor(props: EditPopoverProps): JSX.Element {
   const { appState } = useStores();
   const [fonts, setFonts] = React.useState<IOptionProps[]>();
 
@@ -39,12 +35,12 @@ export default function FontEditor(props: any): JSX.Element {
     ipcRenderer.send("did-start-getfonts");
   }, []);
 
-  const setFontFamily = (evt: React.ChangeEvent<HTMLSelectValueElement>): void => {
+  const setFontFamily = (evt: React.ChangeEvent<HTMLSelectElement>): void => {
     appState.setTextProps({ fontFamily: evt.currentTarget.value });
   };
 
-  const setFontSize = (evt: React.ChangeEvent<HTMLSelectValueElement>): void => {
-    appState.setTextProps({ fontSize: evt.currentTarget.value });
+  const setFontSize = (evt: React.ChangeEvent<HTMLSelectElement>): void => {
+    appState.setTextProps({ fontSize: +evt.currentTarget.value });
   };
 
   const setTextColor = (color: ColorResult): void => {
