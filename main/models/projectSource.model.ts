@@ -1,6 +1,7 @@
-import { Project } from '../sources/util';
+import { BKProject } from './projectFormat.model';
 
 export default interface ProjectSource {
-  PROJECT_TYPE: string;
-  getProjectStructure(rootDirectories: string[]): Project[];
+  SOURCE_TYPE: string;
+  getBKProjects(rootDirectories: string[]): BKProject[];
+  reloadProject(project: BKProject): BKProject;
 }

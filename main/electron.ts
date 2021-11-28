@@ -19,11 +19,9 @@ import { SubmissionArgs, SubmissionReturn } from '../src/models/submission.model
 import isDev from '../src/utility/isDev';
 import { convert } from './commands/convert';
 import { prepareLogger } from './commands/logger';
-import { bkImport } from './import/hearThis/hearThisImport';
 import { ProgressState } from './models/progressState.model';
-import { Verses } from './models/verses.model';
+import { BKProject } from './models/projectFormat.model';
 import SourceIndex from './sources/index';
-import { Project, getSampleVerses } from './sources/util';
 
 let mainWindow: BrowserWindow | undefined;
 
@@ -92,16 +90,6 @@ export function handleGetFonts(): void {
   });
 }
 
-export function handleGetSampleVerses(): void {
-  ipcMain.on('did-start-getverses', (event: IpcMainEvent, args: Verses): void => {
-    const { sourceDirectory } = args;
-    winston.log('info', 'Getting sample verses', sourceDirectory);
-    const verses = getSampleVerses(sourceDirectory);
-    winston.log('info', 'Got sample verses', verses);
-    event.sender.send('did-finish-getverses', verses);
-  });
-}
-
 // NOTE: RootDirectories type is the [rootDirectories] property of App/store/Settings.ts
 // {
 //   [constants.ts - PROJECT_TYPE.hearThis]: string[]
@@ -113,15 +101,15 @@ interface RootDirectories {
 }
 
 export function handleGetProjects(): void {
-  ipcMain.on('did-start-getprojectstructure', (event: IpcMainEvent, rootDirectories: RootDirectories): void => {
+  ipcMain.on('did-start-getbkproject', (event: IpcMainEvent, rootDirectories: RootDirectories): void => {
     const projects = flatten(
-      map(rootDirectories, (directories: string[], projectType: string): Project[] => {
-        // .getProjectStructure is in /main/sources/hear-this.ts or scripture-app-builder.ts
-        const project = SourceIndex.getProject(projectType);
-        return project != null ? project.getProjectStructure(directories) : [];
+      map(rootDirectories, (directories: string[], sourceType: string): BKProject[] => {
+        // .getBKProject is in /main/sources/hear-this.ts or scripture-app-builder.ts
+        const source = SourceIndex.getSource(sourceType);
+        return source != null ? source.getBKProjects(directories) : [];
       })
     );
-    event.sender.send('did-finish-getprojectstructure', projects);
+    event.sender.send('did-finish-getbkproject', projects);
   });
 }
 
@@ -134,9 +122,12 @@ export function handleSubmission(): void {
     winston.log('info', 'Starting conversion', args);
     let response: string | Error;
     try {
-      // ToDo: move this to the frontend and pass a subset of the selected chapters across the IPC.
-      const bkProject = await bkImport(args.project);
-      response = await convert(bkProject, args.combined, args.animationSettings, onProgress);
+      const source = SourceIndex.getSource(args.project.sourceType);
+      if (source == null) {
+        throw new Error('Source undefined');
+      }
+      const project = await source.reloadProject(args.project);
+      response = await convert(project, args.combined, args.animationSettings, onProgress);
     } catch (err) {
       response = err as Error;
     }
@@ -160,7 +151,6 @@ app.on('ready', (): void => {
   createWindow();
   handleSubmission();
   handleGetProjects();
-  handleGetSampleVerses();
   handleGetFonts();
   handleFileDialogs();
 });

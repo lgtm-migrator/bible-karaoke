@@ -1,5 +1,5 @@
 import test from 'ava';
-import { sortInCanonicalOrder, isValidAudioFile } from './util';
+import { isValidAudioFile, sortInCanonicalOrder } from './util';
 
 test('sorts books canonically', (t) => {
   const bookNames = ['Revelation', 'Genesis', 'Matthew', 'Psalms'];
@@ -12,22 +12,13 @@ test('appends unrecognised books to end', (t) => {
 });
 
 test('check valid audio file', (t) => {
-  const fileName = 'file.mp4';
-  const defaultXmlName = 'index.xml';
-  const audioFilters = ['mp4', 'webm'];
-  t.true(isValidAudioFile(fileName, defaultXmlName, audioFilters));
+  const fileName = 'audioFile.wav';
+  const audioFilters = ['mp3', 'wav'];
+  t.true(isValidAudioFile(fileName, audioFilters));
 });
 
 test('check not valid audio file', (t) => {
-  const fileName = 'file.mp4';
-  const defaultXmlName = 'index.xml';
-  const audioFilters = ['webm', 'avi'];
-  t.false(isValidAudioFile(fileName, defaultXmlName, audioFilters));
-});
-
-test('check is xml file', (t) => {
-  const fileName = 'index.xml';
-  const defaultXmlName = 'index.xml';
-  const audioFilters = ['mp4', 'webm'];
-  t.false(isValidAudioFile(fileName, defaultXmlName, audioFilters));
+  const fileName = 'notAnAudioFile.badExtension';
+  const audioFilters = ['mp3', 'wav'];
+  t.false(isValidAudioFile(fileName, audioFilters));
 });

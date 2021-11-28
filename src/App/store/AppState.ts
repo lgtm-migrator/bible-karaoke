@@ -2,8 +2,8 @@ import { ipcRenderer } from 'electron';
 import _ from 'lodash';
 import { observable, computed, action, reaction, toJS } from 'mobx';
 import { persist } from 'mobx-persist';
-import { ConvertProject } from '../../../main/models/convertFormat.model';
 import { ProgressState } from '../../../main/models/progressState.model';
+import { BKProject, BKBook, BKChapter, BKAudio, BKSegment } from '../../../main/models/projectFormat.model';
 import {
   BackgroundSettings,
   BackgroundType,
@@ -25,20 +25,6 @@ const SAMPLE_VERSES = [
   'God called the light Day, and the darkness he called Night. ' +
     'And there was evening and there was morning, the first day.',
 ];
-
-const list = <T = Project>(dict: { [name: string]: T }, sortKey = 'name'): T[] => _.sortBy(_.values(dict), sortKey);
-
-const dict = <T = Project | Book | Chapter>(
-  list: T[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  classType?: { new (item: any): T },
-  key = 'name'
-): { [name: string]: T } => {
-  return list.reduce((items, item) => {
-    items[item[key]] = classType ? new classType(item) : item;
-    return items;
-  }, {});
-};
 
 const isVideo = _.memoize((ext: string): boolean => ['mp4', 'webm', 'mov', 'avi'].includes(ext.toLowerCase()));
 
@@ -79,15 +65,17 @@ class Background implements BackgroundSettings {
   }
 }
 
-type ChapterConstructor = { name: string; fullPath: string };
+type ChapterConstructor = { name: string; audio: BKAudio; segments: BKSegment[] };
 
-export class Chapter {
+export class Chapter implements BKChapter {
   name: string;
-  fullPath: string;
+  audio: BKAudio;
+  segments: BKSegment[];
 
-  constructor({ name, fullPath }: ChapterConstructor) {
+  constructor({ name, audio, segments }: ChapterConstructor) {
     this.name = name;
-    this.fullPath = fullPath;
+    this.audio = audio;
+    this.segments = segments;
   }
 
   @observable
@@ -106,40 +94,36 @@ export class Chapter {
 
 type BookConstructor = { name: string; chapters: ChapterConstructor[] };
 
-export class Book {
+export class Book implements BKBook {
   name: string;
 
   constructor({ name, chapters }: BookConstructor) {
     this.name = name;
-    this.chapterList = chapters.map((chapter: ChapterConstructor) => new Chapter(chapter));
-    this.chapters = dict<Chapter>(this.chapterList);
+    this.chapters = chapters.map((chapter: ChapterConstructor) => new Chapter(chapter));
   }
 
   @observable
-  chapters = {};
-
-  @observable
-  chapterList: Chapter[] = [];
+  chapters: Chapter[] = [];
 
   @computed({ keepAlive: true })
   get selectedChapters(): Chapter[] {
-    return _.filter(this.chapterList, 'isSelected');
+    return _.filter(this.chapters, 'isSelected');
   }
 
   @computed({ keepAlive: true })
   get isSelected(): boolean {
-    return _.some(this.chapterList, 'isSelected');
+    return _.some(this.chapters, 'isSelected');
   }
 
   @computed({ keepAlive: true })
   get allSelected(): boolean {
-    return _.every(this.chapterList, 'isSelected');
+    return _.every(this.chapters, 'isSelected');
   }
 
   @action.bound
   toggleAllChapters(): void {
     const isSelected = this.allSelected;
-    this.chapterList.forEach((chapter: Chapter) => chapter.setIsSelected(!isSelected));
+    this.chapters.forEach((chapter: Chapter) => chapter.setIsSelected(!isSelected));
   }
 
   selectionToString(): string {
@@ -149,18 +133,19 @@ export class Book {
   }
 }
 
-type ProjectConstructor = { name: string; fullPath: string; books: BookConstructor[] };
+type ProjectConstructor = { name: string; folderPath: string; sourceType: string; books: BookConstructor[] };
 
-export class Project {
+export class Project implements BKProject {
   name: string;
-  fullPath: string;
+  folderPath: string;
+  readonly sourceType: string;
 
-  constructor({ name, fullPath, books }: ProjectConstructor) {
+  constructor({ name, folderPath, sourceType, books }: ProjectConstructor) {
     this.name = name;
-    this.fullPath = fullPath;
-    this.bookList = books.map((book: BookConstructor) => new Book(book));
-    this.books = dict<Book>(this.bookList);
-    this.bookList.forEach((book: Book) => {
+    this.folderPath = folderPath;
+    this.sourceType = sourceType;
+    this.books = books.map((book: BookConstructor) => new Book(book));
+    this.books.forEach((book: Book) => {
       reaction(
         () => book.isSelected,
         (isSelected: boolean) => {
@@ -171,10 +156,7 @@ export class Project {
   }
 
   @observable
-  books = {};
-
-  @observable
-  bookList: Book[] = [];
+  books: Book[] = [];
 
   @observable
   bookSelection: string[] = [];
@@ -184,7 +166,7 @@ export class Project {
 
   @computed({ keepAlive: true })
   get selectedBooks(): Book[] {
-    return _.filter(this.bookList, 'isSelected');
+    return _.filter(this.books, 'isSelected');
   }
 
   @computed({ keepAlive: true })
@@ -200,8 +182,8 @@ export class Project {
   }
 
   @computed({ keepAlive: true })
-  get activeBook(): Book {
-    return _.get(this.books, [this.activeBookName]);
+  get activeBook(): Book | undefined {
+    return _.find(this.books, { name: this.activeBookName });
   }
 
   @action.bound
@@ -217,15 +199,17 @@ export class Project {
     }
   }
 
-  selectionToJS(): ConvertProject {
+  selectionToJS(): BKProject {
     return {
       name: this.name,
-      fullPath: this.fullPath,
+      folderPath: this.folderPath,
+      sourceType: this.sourceType,
       books: this.selectedBooks.map((book) => ({
         name: book.name,
         chapters: book.selectedChapters.map((chapter) => ({
           name: chapter.name,
-          fullPath: chapter.fullPath,
+          audio: { files: [] },
+          segments: [],
         })),
       })),
     };
@@ -234,25 +218,20 @@ export class Project {
 
 class ProjectList {
   constructor() {
-    ipcRenderer.on('did-finish-getprojectstructure', (_event: Event, projects: Project[]) => {
+    ipcRenderer.on('did-finish-getbkproject', (_event: Event, projects: Project[]) => {
       this.setProjects(projects);
     });
   }
 
   @observable
-  items: { [name: string]: Project } = {};
+  items: Project[] = [];
 
   @observable
   activeProjectName = '';
 
   @computed({ keepAlive: true })
-  get list(): Project[] {
-    return list(this.items);
-  }
-
-  @computed({ keepAlive: true })
   get activeProject(): Project {
-    return this.items[this.activeProjectName];
+    return _.find(this.items, { name: this.activeProjectName }) as Project;
   }
 
   @computed({ keepAlive: true })
@@ -269,11 +248,11 @@ class ProjectList {
   }
 
   @action.bound
-  setProjects(projectList: Project[]): void {
-    this.items = dict<Project>(projectList, Project);
+  setProjects(projectList: BKProject[]): void {
+    this.items = projectList.map((project) => new Project(project));
     if (projectList.length === 1) {
       this.activeProjectName = projectList[0].name;
-    } else if (!this.items[this.activeProjectName]) {
+    } else if (!_.find(this.items, { name: this.activeProjectName })) {
       this.activeProjectName = '';
     }
   }
@@ -281,7 +260,7 @@ class ProjectList {
   @action.bound
   setActiveProject(projectName = ''): void {
     this.activeProjectName = projectName;
-    this.list.forEach((project) => project.setActiveBook(''));
+    this.items.forEach((project) => project.setActiveBook(''));
   }
 }
 
@@ -368,20 +347,12 @@ class AppState {
   constructor(root: Store) {
     this.root = root;
     this.timingFile = '';
-    ipcRenderer.on('did-finish-getverses', (_event: Event, verses: string[]) => {
-      if (Array.isArray(verses) && verses.length) {
-        this.setVerses(verses);
-      } else {
-        console.error('Failed to set verses', verses);
-      }
-    });
     reaction(
       () => this.projects.firstSelectedChapter,
       (firstSelectedChapter) => {
-        if (firstSelectedChapter) {
-          ipcRenderer.send('did-start-getverses', {
-            sourceDirectory: firstSelectedChapter.fullPath, // TODO: verses.model.ts
-          });
+        if (firstSelectedChapter && firstSelectedChapter.segments && firstSelectedChapter.segments[0].text) {
+          const sampleVerses = firstSelectedChapter.segments.slice(0, 4).map((segment: BKSegment) => segment.text);
+          this.setVerses(sampleVerses);
         } else {
           this.setVerses(SAMPLE_VERSES);
         }
@@ -487,14 +458,7 @@ class AppState {
   generateVideo(combined: boolean): void {
     // TODO: Pass selected project structure to the CLI
     const project = this.projects.activeProject.selectionToJS();
-    const sourceDirectory = _.get(this.projects, [
-      'activeProject',
-      'selectedBooks',
-      '0',
-      'selectedChapters',
-      '0',
-      'fullPath',
-    ]);
+    const sourceDirectory = _.get(this.projects, ['activeProject', 'folderPath']);
     const args: SubmissionArgs = {
       project,
       combined,

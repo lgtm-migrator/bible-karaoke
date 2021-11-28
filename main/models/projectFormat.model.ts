@@ -1,11 +1,12 @@
 // BK Project Format
 export interface BKProject {
   readonly name: string;
-  readonly dirName: string;
+  readonly folderPath: string;
+  readonly sourceType: string;
   readonly books: BKBook[];
 }
 
-interface BKBook {
+export interface BKBook {
   readonly name: string;
   readonly chapters: BKChapter[];
 }
@@ -24,7 +25,7 @@ export interface BKAudio {
   length?: number;
 }
 
-interface BKSegment {
+export interface BKSegment {
   readonly segmentId: number;
   readonly text: string;
   readonly verse: string;
