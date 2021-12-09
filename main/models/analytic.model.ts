@@ -6,5 +6,5 @@ export interface AnalyticsInterface {
   resetClientId(): void;
   trackScreenview(screenName: string): Promise<void>;
   trackEvent(category: string, action: string, label?: string, value?: number): Promise<void>;
-  trackError(error: object | string, fatal: number): Promise<void>;
+  trackError(error: Record<string, unknown> | string, fatal: number): Promise<void>;
 }

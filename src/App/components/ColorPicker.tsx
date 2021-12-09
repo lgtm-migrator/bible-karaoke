@@ -61,7 +61,9 @@ export default class ColorPicker extends React.Component<ColorPickerProps> {
   };
 
   get propTypes(): {
+    // eslint-disable-next-line @typescript-eslint/ban-types
     value?: PropTypes.Requireable<string | object>;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     presetColors?: PropTypes.Requireable<(string | object | null | undefined)[]>;
     disableAlpha?: PropTypes.Requireable<boolean>;
     disabled?: PropTypes.Requireable<boolean>;

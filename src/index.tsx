@@ -8,7 +8,7 @@ import Store from "./App/store";
 
 const store: Store = new Store();
 
-const GlobalStyle: GlobalStyleComponent<{}, DefaultTheme> = createGlobalStyle`
+const GlobalStyle: GlobalStyleComponent<Record<string, never>, DefaultTheme> = createGlobalStyle`
   body {
     margin: 0;
     padding: 0;
