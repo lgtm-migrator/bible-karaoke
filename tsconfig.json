@@ -5,7 +5,8 @@
     "moduleResolution": "node",
     "isolatedModules": true,
     "outDir": "build",
-    "noEmit": true
+    "noEmit": true,
+    "useDefineForClassFields": true
   },
   "include": ["main/**/*", "typings"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.integration.ts"]
