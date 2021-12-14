@@ -11,6 +11,7 @@
     "suppressImplicitAnyIndexErrors": true,
     "jsx": "react",
     "resolveJsonModule": true,
+    "outDir": "build",
     "sourceMap": true
   },
   "include": ["main/**/*", "typings"],

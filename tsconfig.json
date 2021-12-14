@@ -1,13 +1,10 @@
 {
   "extends": "./tsconfig.spec.json",
   "compilerOptions": {
-    "module": "esnext",
-    "moduleResolution": "node",
-    "isolatedModules": true,
-    "outDir": "build",
-    "noEmit": true,
-    "useDefineForClassFields": true
+    "lib": ["dom", "es2019", "es2020.promise", "es2020.bigint", "es2020.string"],
+    "module": "CommonJS",
+    "target": "es5"
   },
-  "include": ["main/**/*", "typings"],
+  "include": ["main/**/*", "src/**/*", "typings"],
   "exclude": ["node_modules", "**/*.spec.ts", "**/*.integration.ts"]
 }

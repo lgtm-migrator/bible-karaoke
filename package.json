@@ -14,15 +14,15 @@
   "private": true,
   "main": "build/main/electron.js",
   "scripts": {
-    "compile": "tsc --project tsconfig.electron.json",
+    "compile": "tsc --project tsconfig.json",
     "copy-files": "copyfiles \"main/rendering/render.html\" build",
     "rescripts-pre": "npm run compile && npm run ff && npm run copy-files",
     "electron-dev": "concurrently \"cross-env BROWSER=none npm run start\" \"wait-on http://localhost:3000 && cross-env ELECTRON_ENV=development electron . --inspect 9229\"",
     "start": "npm run rescripts-pre && rescripts start",
     "build": "rescripts build && npm run rescripts-pre",
-    "pretest": "tsc --project tsconfig.spec.json",
+    "pretest": "tsc --project tsconfig.spec.json && npm run copy-files",
     "test": "ava **/*.spec.js",
-    "preintegration": "tsc --project tsconfig.spec.json && npm run ff",
+    "preintegration": "tsc --project tsconfig.spec.json && npm run ff && npm run copy-files",
     "integration": "ava **/*.integration.js",
     "ff": "ffbinaries ffmpeg ffprobe -o=binaries",
     "postinstall": "electron-builder install-app-deps",
@@ -128,7 +128,7 @@
       "ts"
     ],
     "files": [
-      "main/**/*.{spec,integration}.js"
+      "build/main/**/*.{spec,integration}.js"
     ]
   },
   "build": {
