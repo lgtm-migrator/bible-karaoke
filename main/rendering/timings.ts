@@ -1,27 +1,23 @@
-import path from 'path';
-import { BKChapter, BKAudio } from '../models/projectFormat.model';
+import { BKChapter } from '../models/projectFormat.model';
 import { Timings, LineTiming } from '../models/timings.model';
 
 export function chapterFormatToTimings(chapter: BKChapter): Timings {
-  const audioIndexes = getAudioIndexes(chapter.audio);
   const timings: Timings = [];
   for (const segment of chapter.segments) {
-    if (audioIndexes.includes(segment.segmentId - 1)) {
-      const contentWords = segment.text.split(' ');
-      const lineTiming: LineTiming = {
-        type: 'caption',
-        index: segment.segmentId,
-        start: segment.startTime,
-        end: segment.startTime + segment.length,
-        duration: segment.length,
-        content: segment.text,
-        text: '',
-        words: [],
-        isHeading: segment.isHeading,
-      };
-      formatWords(contentWords, lineTiming);
-      timings.push(lineTiming);
-    }
+    const contentWords = segment.text.split(' ');
+    const lineTiming: LineTiming = {
+      type: 'caption',
+      index: segment.segmentId,
+      start: segment.startTime,
+      end: segment.startTime + segment.length,
+      duration: segment.length,
+      content: segment.text,
+      text: '',
+      words: [],
+      isHeading: segment.isHeading,
+    };
+    formatWords(contentWords, lineTiming);
+    timings.push(lineTiming);
   }
   return timings;
 }
@@ -48,12 +44,4 @@ function formatWords(words: string[], lineTiming: LineTiming): void {
     lineTiming.words.push({ word, start, end });
     start = end;
   }
-}
-
-function getAudioIndexes(audio: BKAudio): number[] {
-  const audioIndexes = [];
-  for (const file of audio.files) {
-    audioIndexes.push(parseInt(path.parse(file.filename).name));
-  }
-  return audioIndexes;
 }

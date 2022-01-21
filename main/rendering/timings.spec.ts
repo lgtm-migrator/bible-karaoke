@@ -35,15 +35,6 @@ test('timings.chapterFormatToTimings test', (t) => {
         length: 9300,
         isHeading: false,
       },
-      // this segment has no audio and should be skipped
-      {
-        segmentId: 3,
-        text: 'And God said, “Let there be light,” and there was light.',
-        verse: '3',
-        startTime: 17200,
-        length: 5400,
-        isHeading: false,
-      },
     ],
   };
   const expectedTimings: Timings = [

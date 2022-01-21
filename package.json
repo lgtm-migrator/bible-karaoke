@@ -47,6 +47,7 @@
     "electron-ga-uuid": "^1.0.2",
     "font-list": "^1.4.2",
     "fs-extra": "^10.0.0",
+    "jsdom": "^19.0.0",
     "lodash": "^4.17.21",
     "mobx": "^6.3.8",
     "mobx-persist": "^0.4.1",
@@ -60,6 +61,7 @@
     "styled-components": "^5.3.3",
     "styled-system": "^5.1.5",
     "tmp-promise": "^3.0.3",
+    "usfm-js": "^3.3.1",
     "winston": "^3.3.3",
     "xml-js": "^1.6.11"
   },
@@ -67,6 +69,7 @@
     "@ava/typescript": "^1.1.1",
     "@rescripts/cli": "^0.0.16",
     "@tsconfig/node16": "^1.0.2",
+    "@types/jsdom": "^16.2.14",
     "@types/lodash": "^4.14.170",
     "@types/node": "^12.20.37",
     "@types/pixelmatch": "^5.2.4",

@@ -26,7 +26,6 @@ const defaultHearThisDirectory = getDefaultHearThisDirectory();
 const defaultAppBuilderDirectory = getDefaultScriptureAppBuilderDirectory();
 
 interface DirectoriesCardInterface {
-  display?: string;
   name: string;
   directories: string[];
   onSetDirectories(directories: string[]): void;
@@ -47,7 +46,7 @@ const DirectoriesCard = (prop: DirectoriesCardInterface): JSX.Element => {
   };
 
   return (
-    <Card mb={3} className="settings__card" display={prop.display ?? ""}>
+    <Card mb={3} className="settings__card">
       <Flex alignItems="center" justifyContent="space-between" mb={2}>
         <H5 mb={0}>{prop.name} Projects Folders</H5>
         <DirectoryHeading alignItems="center">
@@ -116,7 +115,6 @@ const Settings = observer((): JSX.Element => {
         defaultDirectory={defaultHearThisDirectory}
       />
       <DirectoriesCard
-        display="none"
         name="Scripture App Builder"
         directories={settings.scriptureAppBuilderRootDirectories}
         onSetDirectories={settings.setScriptureAppBuilderRootDirectories}
