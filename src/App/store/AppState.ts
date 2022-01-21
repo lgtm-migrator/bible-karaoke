@@ -214,8 +214,8 @@ export class Project implements BKProject {
         name: book.name,
         chapters: book.selectedChapters.map((chapter) => ({
           name: chapter.name,
-          audio: { files: [] },
-          segments: [],
+          audio: { files: chapter.audio.files },
+          segments: chapter.segments,
         })),
       })),
     };
