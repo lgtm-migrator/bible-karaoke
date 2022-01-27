@@ -34,6 +34,7 @@ jobs:
       - run: npm test
       - run: npm run integration
       - name: Get png test files
+        if: always()
         uses: actions/upload-artifact@v2
         with:
           name: png-test-files
