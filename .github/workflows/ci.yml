@@ -33,3 +33,9 @@ jobs:
       - run: npm run build
       - run: npm test
       - run: npm run integration
+      - name: Get png test files
+        uses: actions/upload-artifact@v2
+        with:
+          name: png-test-files
+          path: |
+            *.png

@@ -54,7 +54,7 @@ test('recordFrames: verify frames are not all the same', async (t) => {
     // for each set of images use pixelmatch to find the number of different pixels
     diffPixels.push(pixelmatch(img1.data, img2.data, diff.data, width, height, { threshold: 0 }));
     // TIP: if you would like to see a PNG that shows the differences of the images uncomment this line
-    // fs.writeFileSync('diff_'+i+'.png', PNG.sync.write(diff));
+    fs.writeFileSync('diff_' + i + '.png', PNG.sync.write(diff));
   }
   // store the number of times the compares do not change from second to second
   let noChange = 0;
