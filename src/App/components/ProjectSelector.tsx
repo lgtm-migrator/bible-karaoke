@@ -1,7 +1,7 @@
-import _ from "lodash";
 import { observer } from "mobx-react";
 import React from "react";
 import { HTMLSelect } from "../blueprint";
+import { PROJECT_TYPE } from "../constants";
 import { Project, useStores } from "../store";
 import { useAnalytics } from "./Analytics";
 
@@ -10,7 +10,7 @@ const ProjectSelector = observer((): JSX.Element => {
   const { analytics } = useAnalytics();
   const onChange = React.useCallback(
     (event) => {
-      if (!event.target.value && appState.projects.activeProjectName) {
+      if (!event.target.value && appState.projects.activeProjectPath) {
         // Do not allow user to 'un-select' a project
         return;
       }
@@ -26,20 +26,35 @@ const ProjectSelector = observer((): JSX.Element => {
     },
     [appState, analytics]
   );
-  const projectOptions = [
-    { value: "", label: "Select a project..." },
-    ..._.map(appState.projects.items, (p: Project) => ({ value: p.name, label: p.name })),
-  ];
 
+  const hearThisProjects = appState.projects.items
+    .filter((p: Project) => p.sourceType === PROJECT_TYPE.hearThis)
+    .map((p: Project) => (
+      <option value={p.folderPath} key={p.folderPath}>
+        {p.name}
+      </option>
+    ));
+  const SABProjects = appState.projects.items
+    .filter((p: Project) => p.sourceType === PROJECT_TYPE.scriptureAppBuilder)
+    .map((p: Project) => (
+      <option value={p.folderPath} key={p.folderPath}>
+        {p.name}
+      </option>
+    ));
   return (
     <HTMLSelect
       fill
-      large={!appState.projects.activeProjectName}
+      large={!appState.projects.activeProjectPath}
       id="select-project"
-      options={projectOptions}
-      value={appState.projects.activeProjectName}
+      value={appState.projects.activeProjectPath}
       onChange={onChange}
-    />
+    >
+      <option value="" key="Select a project...">
+        Select a project...
+      </option>
+      <optgroup label="HearThis">{hearThisProjects}</optgroup>
+      <optgroup label="SAB">{SABProjects}</optgroup>
+    </HTMLSelect>
   );
 });
 
