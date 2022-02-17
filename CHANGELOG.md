@@ -6,6 +6,16 @@
 - :thumbsup: Improvement
 - :boom: Bug fix
 
+## v1.1.0
+
+This is a minor feature and bugfix release:
+
+- :star: Create videos from **Scripture App Builder** (SAB) as well as **HearThis**
+- :thumbsup: improved security of the app
+- :boom: When audio files have different sample rates they are now combined correctly at the right speed
+- :boom: Changing the background image/video and changing either the SAB or HearThis source folder in **Settings** no
+  longer interfere with each other
+
 ## v1.0.1
 
 This is a bugfix release:
