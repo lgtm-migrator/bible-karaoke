@@ -19,9 +19,7 @@ export async function combineVideos(
   }
   filterComplex.push(`concat=n=${videoPaths.length}:v=1:a=1`, '[v]', '[a]');
   args.push('-filter_complex', filterComplex.join(' '), '-map', '[v]', '-map', '[a]', outputFilePath);
-  const combineProcess = spawnSync(paths.ffmpeg, args, {
-    stdio: 'pipe',
-  });
+  const combineProcess = spawnSync(paths.ffmpeg, args, { stdio: 'pipe', windowsHide: true });
   const stderr = combineProcess.stderr.toString();
   if (stderr !== '') {
     winston.error(stderr);

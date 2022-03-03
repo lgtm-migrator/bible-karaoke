@@ -167,7 +167,10 @@ export default new HearThis();
 
 // Adapted from https://github.com/caffco/get-audio-duration:
 function getAudioDurationInMilliseconds(filePath: string): number {
-  const ffprobe = spawnSync(paths.ffprobe, ['-v', 'error', '-show_format', filePath], { stdio: 'pipe' });
+  const ffprobe = spawnSync(paths.ffprobe, ['-v', 'error', '-show_format', filePath], {
+    stdio: 'pipe',
+    windowsHide: true,
+  });
 
   const stderr = ffprobe.stderr.toString();
   if (stderr !== '') {

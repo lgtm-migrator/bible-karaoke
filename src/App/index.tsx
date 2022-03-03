@@ -14,7 +14,7 @@ import Preview from "./components/Preview";
 import { useStores } from "./store";
 import "./index.scss";
 
-const AppWrapper: StyledComponent<BoxType, object, {}> = styled(Flex)`
+const AppWrapper: StyledComponent<BoxType, Record<string, unknown>> = styled(Flex)`
   position: relative;
 `;
 

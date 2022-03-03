@@ -2,15 +2,17 @@ import fs from 'fs';
 import path from 'path';
 import {
   app,
-  ipcMain,
-  shell,
-  Menu,
   BrowserWindow,
-  Event,
-  IpcMainEvent,
-  SaveDialogOptions,
   dialog,
+  Event,
+  HandlerDetails,
+  ipcMain,
+  IpcMainEvent,
+  Menu,
+  NewWindowWebContentsEvent,
   OpenDialogOptions,
+  SaveDialogOptions,
+  shell,
 } from 'electron';
 import fontList from 'font-list';
 import { map, flatten } from 'lodash';
@@ -36,7 +38,6 @@ export function createWindow(): void {
     webPreferences: {
       nodeIntegration: false,
       webSecurity: true,
-      enableRemoteModule: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -53,12 +54,25 @@ export function createWindow(): void {
   mainWindow.on('closed', (): void => {
     mainWindow = undefined;
   });
-  mainWindow.webContents.on('new-window', (event: Event, url: string): void => {
-    if (url.startsWith('http:') || url.startsWith('https:')) {
-      event.preventDefault();
-      shell.openExternal(url);
+
+  // see https://github.com/electron/electron/issues/27967 and https://www.electronjs.org/docs/latest/api/window-open
+  mainWindow.webContents.on('new-window', (event: NewWindowWebContentsEvent) => {
+    event.preventDefault();
+  });
+  mainWindow.webContents.on('will-navigate', (event: Event) => {
+    event.preventDefault();
+  });
+  mainWindow.webContents.setWindowOpenHandler((details: HandlerDetails) => {
+    if (details.url.startsWith('http:') || details.url.startsWith('https:')) {
+      setImmediate(() => {
+        shell.openExternal(details.url);
+      });
+      return { action: 'allow', overrideBrowserWindowOptions: { show: false } };
+    } else {
+      return { action: 'deny' };
     }
   });
+
   mainWindow.once('ready-to-show', () => {
     mainWindow?.show();
   });
@@ -144,22 +158,22 @@ export function handleSubmission(): void {
   });
 }
 
-app.on('ready', (): void => {
+app.whenReady().then((): void => {
   createWindow();
   handleSubmission();
   handleGetProjects();
   handleGetFonts();
   handleFileDialogs();
+
+  app.on('activate', (): void => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
 });
 
 app.on('window-all-closed', (): void => {
   if (process.platform !== 'darwin') {
     app.quit();
-  }
-});
-
-app.on('activate', (): void => {
-  if (mainWindow == null) {
-    createWindow();
   }
 });

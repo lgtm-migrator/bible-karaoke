@@ -65,11 +65,11 @@
     "xml-js": "^1.6.11"
   },
   "devDependencies": {
-    "@ava/typescript": "^1.1.1",
+    "@ava/typescript": "^2.0.0",
     "@rescripts/cli": "^0.0.16",
     "@tsconfig/node16": "^1.0.2",
     "@types/jsdom": "^16.2.14",
-    "@types/lodash": "^4.14.170",
+    "@types/lodash": "^4.14.177",
     "@types/node": "^12.20.37",
     "@types/pixelmatch": "^5.2.4",
     "@types/pngjs": "^6.0.1",
@@ -78,13 +78,13 @@
     "@types/react-dom": "^17.0.11",
     "@types/reflexbox": "^4.0.3",
     "@types/styled-components": "^5.1.17",
-    "@typescript-eslint/eslint-plugin": "^2.34.0",
-    "@typescript-eslint/parser": "^2.34.0",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "ava": "^3.15.0",
     "concurrently": "^6.4.0",
     "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
-    "electron": "^11.5.0",
+    "electron": "^14.2.2",
     "electron-builder": "^22.14.5",
     "eslint-plugin-ava": "^10.5.0",
     "eslint-plugin-react": "^7.27.1",
@@ -95,6 +95,7 @@
     "prettier": "^2.5.1",
     "sass": "^1.44.0",
     "typescript": "^4.5.2",
+    "url-parse-lax": "^3.0.0",
     "wait-on": "^5.3.0"
   },
   "bin": {

@@ -54,7 +54,7 @@ export default class Analytics implements AnalyticsInterface {
     }
   };
 
-  trackError = async (error: object | string, fatal: number): Promise<void> => {
+  trackError = async (error: Record<string, unknown> | string, fatal: number): Promise<void> => {
     const params = { exd: error, exf: fatal == null ? 1 : fatal };
     if (this.isEnabled && this.ga) {
       await this.ga.send('exception', params);

@@ -45,7 +45,7 @@ export async function combineFrames(settings: CombineFramesSettings): Promise<vo
 
   args.push('-pix_fmt', 'yuv420p', settings.outputName);
 
-  const ffmpegProcess = spawnSync(paths.ffmpeg, args, { stdio: 'pipe' });
+  const ffmpegProcess = spawnSync(paths.ffmpeg, args, { stdio: 'pipe', windowsHide: true });
 
   //Check for errors running ffmpeg
   const stderr = ffmpegProcess.stderr.toString();
@@ -106,7 +106,7 @@ export async function mergeWavFiles(wavFiles: string[]): Promise<string> {
 
   const args = ['-f', 'concat', '-safe', '0', '-i', fileDir, '-c', 'copy', combinedWavFilePath];
   // Do not echo the console output (ignore stdout).
-  const ffmpegProcess = spawnSync(paths.ffmpeg, args, { stdio: 'ignore' });
+  const ffmpegProcess = spawnSync(paths.ffmpeg, args, { stdio: 'ignore', windowsHide: true });
 
   //Check for errors running ffmpeg
   const stderr = ffmpegProcess.stderr?.toString() ?? '';
