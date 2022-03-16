@@ -1,6 +1,7 @@
 import { spawnSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import tmp from 'tmp-promise';
 import winston from 'winston';
 import { CombineFramesSettings } from '../models/combineFramesSettings.model';
@@ -8,6 +9,7 @@ import { paths } from '../path-constants';
 
 export async function combineFrames(settings: CombineFramesSettings): Promise<void> {
   const executeAudioPath = await combineAudioIfNecessary(settings.audioFiles);
+  const inputFramesPath = path.join(settings.imagesPath, 'frame_%06d.png');
 
   const args = ['-v', 'error'];
 
@@ -15,13 +17,13 @@ export async function combineFrames(settings: CombineFramesSettings): Promise<vo
     if (settings.backgroundType === 'image') {
       args.push('-framerate', settings.framerateIn.toString());
     }
-    args.push('-stream_loop', '-1', '-t', settings.audioDuration.toString(), '-i', settings.backgroundUrl);
+    args.push('-stream_loop', '-1', '-t', settings.audioDuration.toString(), '-i', 'backgroundFile.mp4');
   }
 
-  args.push('-framerate', settings.framerateIn.toString(), '-i', path.join(settings.imagesPath, 'frame_%06d.png'));
+  args.push('-framerate', settings.framerateIn.toString(), '-i', 'inputFrames.png');
 
   if (executeAudioPath != null) {
-    args.push('-i', executeAudioPath);
+    args.push('-i', 'audio.mp3');
   }
 
   // combine background image/video with bkframes
@@ -43,16 +45,33 @@ export async function combineFrames(settings: CombineFramesSettings): Promise<vo
     args.push('-r', settings.framerateOut.toString());
   }
 
-  args.push('-pix_fmt', 'yuv420p', settings.outputName);
+  args.push('-pix_fmt', 'yuv420p', 'outputFile.mp4');
 
-  const ffmpegProcess = spawnSync(paths.ffmpeg, args, { stdio: 'pipe', windowsHide: true });
+  const ffmpeg = createFFmpeg({ log: true });
+
+  (async () => {
+    await ffmpeg.load();
+    ffmpeg.setLogging(true);
+    ffmpeg.FS('writeFile', 'inputFrames.png', await fetchFile(inputFramesPath));
+    if (settings.backgroundUrl) {
+      ffmpeg.FS('writeFile', 'backgroundFile.mp4', await fetchFile(settings.backgroundUrl));
+    }
+    if (executeAudioPath) {
+      ffmpeg.FS('writeFile', 'audio.mp3', await fetchFile(executeAudioPath));
+    }
+    await ffmpeg.run(...args);
+    await fs.promises.writeFile(settings.outputName, ffmpeg.FS('readFile', 'outputFile.mp4'));
+    process.exit(0);
+  })();
+
+  //const ffmpegProcess = spawnSync(paths.ffmpeg, args, { stdio: 'pipe', windowsHide: true });
 
   //Check for errors running ffmpeg
-  const stderr = ffmpegProcess.stderr.toString();
-  if (stderr !== '') {
-    winston.error(stderr);
-    throw new Error(stderr);
-  }
+  // const stderr = ffmpegProcess.stderr.toString();
+  // if (stderr !== '') {
+  //   winston.error(stderr);
+  //   throw new Error(stderr);
+  // }
 }
 
 export async function combineAudioIfNecessary(audioFiles: string[]): Promise<string | undefined> {
