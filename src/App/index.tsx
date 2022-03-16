@@ -40,12 +40,12 @@ const App = observer((): JSX.Element => {
     >
       <AppHeader />
       <Flex flex={1} flexDirection="column" overflowY="auto">
-        <Flex flex={1}>
+        <Flex flex={1} maxHeight="30%">
           <Flex p={3} flex={1} maxWidth="50%">
-            <BookSelector flex={1} />
+            <BookSelector flex={1} overflowY="auto" />
           </Flex>
           <Flex p={3} flex={1} maxWidth="50%">
-            <ChapterSelector flex={1} />
+            <ChapterSelector flex={1} overflowY="auto" />
           </Flex>
         </Flex>
         <Flex flex={1}>
