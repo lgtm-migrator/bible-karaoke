@@ -142,6 +142,14 @@ class ScriptureAppBuilder implements ProjectSource {
   ): BKChapter[] {
     const chapters: BKChapter[] = [];
 
+    let phraseEndChars: string[] = [];
+    const phraseEndCharsString = xmlDoc
+      .querySelector('feature[name=audio-phrase-end-chars]')
+      ?.attributes.getNamedItem('value')?.value;
+    if (phraseEndCharsString) {
+      phraseEndChars = phraseEndCharsString.split(' ');
+    }
+
     // there are two different schemas
     let isPageSchema = true;
 
@@ -183,7 +191,14 @@ class ScriptureAppBuilder implements ProjectSource {
         return [];
       }
 
-      const segments: BKSegment[] = this.makeSegments(sfmJson, +chapterNumber, timingFileName, projectName, directory);
+      const segments: BKSegment[] = this.makeSegments(
+        sfmJson,
+        +chapterNumber,
+        phraseEndChars,
+        timingFileName,
+        projectName,
+        directory
+      );
       if (segments.length > 0) {
         chapters.push({
           name: chapterNumber,
@@ -199,6 +214,7 @@ class ScriptureAppBuilder implements ProjectSource {
   private makeSegments(
     sfmJson: SfmJson,
     chapterNumber: number,
+    phraseEndChars: string[],
     timingFileName: string,
     projectName: string,
     directory: string
@@ -220,13 +236,17 @@ class ScriptureAppBuilder implements ProjectSource {
     // tab separated list with possible decimals
     // representing respectively: start time, end time, verse number
     // e.g. 124.12  123  1
-    const timingPattern = /(\d+\.?\d*)\t(\d+\.?\d*)\t(\d+)/gs;
+    // verse number can be a number representing a verse, a number followed by a letter representing a phrase (separated by phraseEndChars), blank representing the next phrase in the current verse, or can be followed by an underscore and number representing that numbered word in the phrase or verse
+    // e.g. 1.2 2.1 1b_3 (meaning 3rd word of second phrase in first verse)
+    // https://software.sil.org/downloads/r/scriptureappbuilder/Scripture-App-Builder-06-Using-Audacity-for-Audio-Text-Synchronization.pdf
+
+    const timingPattern = /(\d+\.?\d*)\t(\d+\.?\d*)\t(\d+[a-z]*_?\d*)?/gs;
 
     let timingMatches;
-    const timingOutput = [];
+    const timingData = [];
     while ((timingMatches = timingPattern.exec(timingFileContent))) {
       //this is where we get the start time, duration, and verse number from the timing file
-      timingOutput.push({
+      timingData.push({
         startTime: parseFloat(timingMatches[1]) * 1000,
         endTime: parseFloat(timingMatches[2]) * 1000,
         verse: timingMatches[3],
@@ -237,18 +257,45 @@ class ScriptureAppBuilder implements ProjectSource {
     if (!chapterJson) {
       return [];
     }
-    for (const verse in chapterJson) {
-      const startTime = _.find(timingOutput, { verse })?.startTime;
-      const endTime = _.findLast(timingOutput, { verse })?.endTime;
-      const text = chapterJson[verse].verseObjects[0].text;
+    let currentTimingIndex = 0;
+    for (const verseNumber in chapterJson) {
+      if (currentTimingIndex === -1) {
+        break;
+      }
+      const startTime = timingData[currentTimingIndex].startTime;
+      let endTime = timingData[currentTimingIndex].endTime;
+      // gets timing info if the verse number is correct or if it is blank (blank meaning next phrase of current verse)
+      while (
+        parseInt(timingData[currentTimingIndex].verse) === parseInt(verseNumber) ||
+        !timingData[currentTimingIndex].verse
+      ) {
+        // if start and end times are the same, set end time to start of next timing
+        // if it is the last timing data of the chapter, leave them the same and timings.ts will sort it out
+        if (timingData[currentTimingIndex].startTime === timingData[currentTimingIndex].endTime) {
+          if (currentTimingIndex < timingData.length - 1) {
+            endTime = timingData[currentTimingIndex + 1].startTime;
+          }
+        } else {
+          endTime = timingData[currentTimingIndex].endTime;
+        }
+
+        // exit if the end of the timing data is reached
+        if (currentTimingIndex < timingData.length - 1) {
+          currentTimingIndex++;
+        } else {
+          currentTimingIndex = -1;
+          break;
+        }
+      }
+      const text = chapterJson[verseNumber].verseObjects[0].text;
       // skip segment if missing timing info
       if (startTime == null || endTime == null || !text) {
         continue;
       }
       segments.push({
-        segmentId: parseInt(verse),
+        segmentId: parseInt(verseNumber),
         text,
-        verse,
+        verse: verseNumber,
         startTime,
         length: endTime - startTime,
         isHeading: false,
