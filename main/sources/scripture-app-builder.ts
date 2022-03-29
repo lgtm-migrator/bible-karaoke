@@ -4,9 +4,9 @@ import { JSDOM } from 'jsdom';
 import _ from 'lodash';
 import usfm from 'usfm-js';
 import { SOURCE_TYPES } from '../../src/App/constants';
-import { BKBook, BKChapter, BKProject, BKSegment } from '../models/projectFormat.model';
+import { BKBook, BKChapter, BKProject, BKSegment, ExtraTiming } from '../models/projectFormat.model';
 import ProjectSource from '../models/projectSource.model';
-import { getDirectories } from './util';
+import { createPhraseArray, getDirectories, lettersToNumber } from './util';
 
 interface SfmJson {
   chapters?: {
@@ -239,7 +239,6 @@ class ScriptureAppBuilder implements ProjectSource {
     // verse number can be a number representing a verse, a number followed by a letter representing a phrase (separated by phraseEndChars), blank representing the next phrase in the current verse, or can be followed by an underscore and number representing that numbered word in the phrase or verse
     // e.g. 1.2 2.1 1b_3 (meaning 3rd word of second phrase in first verse)
     // https://software.sil.org/downloads/r/scriptureappbuilder/Scripture-App-Builder-06-Using-Audacity-for-Audio-Text-Synchronization.pdf
-
     const timingPattern = /(\d+\.?\d*)\t(\d+\.?\d*)\t(\d+[a-z]*_?\d*)?/gs;
 
     let timingMatches;
@@ -264,6 +263,15 @@ class ScriptureAppBuilder implements ProjectSource {
       }
       const startTime = timingData[currentTimingIndex].startTime;
       let endTime = timingData[currentTimingIndex].endTime;
+      let wordNumber = 0;
+      let phraseNumber = 0;
+      let phraseArray: string[] = [];
+      if (chapterJson[verseNumber].verseObjects[0].text) {
+        phraseArray = createPhraseArray(chapterJson[verseNumber].verseObjects[0].text, phraseEndChars);
+      }
+
+      const extraTiming: ExtraTiming[] = [];
+
       // gets timing info if the verse number is correct or if it is blank (blank meaning next phrase of current verse)
       while (
         parseInt(timingData[currentTimingIndex].verse) === parseInt(verseNumber) ||
@@ -278,6 +286,48 @@ class ScriptureAppBuilder implements ProjectSource {
         } else {
           endTime = timingData[currentTimingIndex].endTime;
         }
+
+        // match the verse string from the timing data:
+        // verse number, then letter to indicate phrase number, underscore then word number
+        // e.g. 1b_3; verse 1, phrase 2, word 3
+        const verseRegex = /\d+([a-z]*)_?(\d*)/;
+        let match: RegExpMatchArray | null = [];
+        if (!timingData[currentTimingIndex].verse) {
+          extraTiming.push({ wordNum: wordNumber, time: timingData[currentTimingIndex].startTime });
+        } else {
+          match = timingData[currentTimingIndex].verse.match(verseRegex);
+        }
+        if (match) {
+          // match[1] is the letter representing the phrase
+          if (match[1]) {
+            const letterNumber = lettersToNumber(match[1]);
+            while (phraseNumber < letterNumber) {
+              if (phraseArray[phraseNumber]) {
+                wordNumber += phraseArray[phraseNumber].split(' ').length;
+              }
+              phraseNumber++;
+            }
+            // skip for first phrase (covered by verse start time)
+            if (wordNumber !== 0) {
+              // match[2] is the word number within the phrase
+              if (match[2]) {
+                extraTiming.push({
+                  wordNum: wordNumber + parseInt(match[2]),
+                  time: timingData[currentTimingIndex].startTime,
+                });
+              } else {
+                extraTiming.push({ wordNum: wordNumber, time: timingData[currentTimingIndex].startTime });
+              }
+            }
+          } else if (match[2]) {
+            extraTiming.push({ wordNum: parseInt(match[2]), time: timingData[currentTimingIndex].startTime });
+          }
+        }
+
+        if (phraseArray[phraseNumber]) {
+          wordNumber += phraseArray[phraseNumber].split(' ').length;
+        }
+        phraseNumber++;
 
         // exit if the end of the timing data is reached
         if (currentTimingIndex < timingData.length - 1) {
@@ -299,6 +349,7 @@ class ScriptureAppBuilder implements ProjectSource {
         startTime,
         length: endTime - startTime,
         isHeading: false,
+        extraTiming,
       });
     }
     return segments;
