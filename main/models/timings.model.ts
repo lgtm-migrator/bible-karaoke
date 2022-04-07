@@ -1,3 +1,5 @@
+import { ExtraTiming } from './projectFormat.model';
+
 export type Timings = LineTiming[];
 
 // this follows the spec ... ?
@@ -8,9 +10,9 @@ export interface LineTiming {
   readonly end: number;
   readonly duration: number;
   readonly content: string;
-  readonly text: string; // not used
   readonly words: WordTiming[];
   readonly isHeading: boolean;
+  readonly extraTimings: ExtraTiming[];
 }
 
 interface WordTiming {

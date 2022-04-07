@@ -45,7 +45,6 @@ test('timings.chapterFormatToTimings test', (t) => {
       end: 6340,
       duration: 5300,
       content: 'In the beginning God created the heavens and the earth.',
-      text: '',
       isHeading: false,
       words: [
         { end: 1329, start: 1040, word: 'In' },
@@ -59,6 +58,7 @@ test('timings.chapterFormatToTimings test', (t) => {
         { end: 5760, start: 5375, word: 'the' },
         { end: 6340, start: 5760, word: 'earth.' },
       ],
+      extraTimings: [],
     },
     {
       type: 'caption',
@@ -68,7 +68,6 @@ test('timings.chapterFormatToTimings test', (t) => {
       duration: 9300,
       content:
         'Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters.',
-      text: '',
       isHeading: false,
       words: [
         { end: 7322, start: 7040, word: 'Now' },
@@ -97,6 +96,7 @@ test('timings.chapterFormatToTimings test', (t) => {
         { end: 15848, start: 15566, word: 'the' },
         { end: 16340, start: 15848, word: 'waters.' },
       ],
+      extraTimings: [],
     },
   ];
 

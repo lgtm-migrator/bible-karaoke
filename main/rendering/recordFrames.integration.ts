@@ -129,7 +129,6 @@ function mockTimings(): Timings {
       end: 5000,
       duration: 5000,
       content: 'This is just a test.',
-      text: '',
       isHeading: false,
       words: [
         { word: 'This', start: 0, end: 1000 },
@@ -138,6 +137,7 @@ function mockTimings(): Timings {
         { word: 'a', start: 3001, end: 4000 },
         { word: 'test.', start: 4001, end: 5000 },
       ],
+      extraTimings: [],
     },
   ];
 }

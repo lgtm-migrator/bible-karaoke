@@ -221,7 +221,11 @@ class ScriptureAppBuilder implements ProjectSource {
   ): BKSegment[] {
     const segments: BKSegment[] = [];
 
-    const timingFileFullName = path.join(directory, projectName, projectName + '_data', 'timings', timingFileName);
+    // timingFileName is usually a file name in the timings folder, but can possibly be a full file path
+    let timingFileFullName = path.join(directory, projectName, projectName + '_data', 'timings', timingFileName);
+    if (!fs.existsSync(timingFileFullName)) {
+      timingFileFullName = timingFileName;
+    }
 
     let timingFileContent;
 
@@ -239,7 +243,7 @@ class ScriptureAppBuilder implements ProjectSource {
     // verse number can be a number representing a verse, a number followed by a letter representing a phrase (separated by phraseEndChars), blank representing the next phrase in the current verse, or can be followed by an underscore and number representing that numbered word in the phrase or verse
     // e.g. 1.2 2.1 1b_3 (meaning 3rd word of second phrase in first verse)
     // https://software.sil.org/downloads/r/scriptureappbuilder/Scripture-App-Builder-06-Using-Audacity-for-Audio-Text-Synchronization.pdf
-    const timingPattern = /(\d+\.?\d*)\t(\d+\.?\d*)\t(\d+[a-z]*_?\d*)?/gs;
+    const timingPattern = /(\d+\.?\d*)\t(\d+\.?\d*)\t(\w*)/gs;
 
     let timingMatches;
     const timingData = [];
@@ -257,7 +261,12 @@ class ScriptureAppBuilder implements ProjectSource {
       return [];
     }
     let currentTimingIndex = 0;
+    // set timingIndex to index of first verse number
+    while (!parseInt(timingData[currentTimingIndex].verse) || parseInt(timingData[currentTimingIndex].verse) < 0) {
+      currentTimingIndex++;
+    }
     for (const verseNumber in chapterJson) {
+      // exit if the end of the timing data is reached
       if (currentTimingIndex === -1) {
         break;
       }
@@ -270,7 +279,7 @@ class ScriptureAppBuilder implements ProjectSource {
         phraseArray = createPhraseArray(chapterJson[verseNumber].verseObjects[0].text, phraseEndChars);
       }
 
-      const extraTiming: ExtraTiming[] = [];
+      const extraTimings: ExtraTiming[] = [];
 
       // gets timing info if the verse number is correct or if it is blank (blank meaning next phrase of current verse)
       while (
@@ -292,8 +301,14 @@ class ScriptureAppBuilder implements ProjectSource {
         // e.g. 1b_3; verse 1, phrase 2, word 3
         const verseRegex = /\d+([a-z]*)_?(\d*)/;
         let match: RegExpMatchArray | null = [];
+        let wordNum = 0;
+        let start = 0;
+        let end = 0;
+
         if (!timingData[currentTimingIndex].verse) {
-          extraTiming.push({ wordNum: wordNumber, time: timingData[currentTimingIndex].startTime });
+          wordNum = wordNumber;
+          start = timingData[currentTimingIndex].startTime;
+          end = timingData[currentTimingIndex].endTime;
         } else {
           match = timingData[currentTimingIndex].verse.match(verseRegex);
         }
@@ -301,31 +316,51 @@ class ScriptureAppBuilder implements ProjectSource {
           // match[1] is the letter representing the phrase
           if (match[1]) {
             const letterNumber = lettersToNumber(match[1]);
-            while (phraseNumber < letterNumber) {
-              if (phraseArray[phraseNumber]) {
-                wordNumber += phraseArray[phraseNumber].split(' ').length;
+            if (letterNumber < phraseNumber) {
+              wordNumber -= phraseArray[phraseNumber - 1].split(' ').filter((w) => w).length;
+              phraseNumber = letterNumber;
+            } else {
+              while (letterNumber > phraseNumber) {
+                if (phraseArray[phraseNumber]) {
+                  wordNumber += phraseArray[phraseNumber].split(' ').filter((w) => w).length;
+                }
+                phraseNumber++;
               }
-              phraseNumber++;
             }
-            // skip for first phrase (covered by verse start time)
-            if (wordNumber !== 0) {
-              // match[2] is the word number within the phrase
-              if (match[2]) {
-                extraTiming.push({
-                  wordNum: wordNumber + parseInt(match[2]),
-                  time: timingData[currentTimingIndex].startTime,
-                });
-              } else {
-                extraTiming.push({ wordNum: wordNumber, time: timingData[currentTimingIndex].startTime });
-              }
+            // match[2] is the word number within the phrase
+            if (match[2]) {
+              wordNum = wordNumber + parseInt(match[2]) - 1;
+              start = timingData[currentTimingIndex].startTime;
+              end = timingData[currentTimingIndex].endTime;
+            } else {
+              wordNum = wordNumber;
+              start = timingData[currentTimingIndex].startTime;
+              end = timingData[currentTimingIndex].endTime;
             }
           } else if (match[2]) {
-            extraTiming.push({ wordNum: parseInt(match[2]), time: timingData[currentTimingIndex].startTime });
+            wordNum = parseInt(match[2]) - 1;
+            start = timingData[currentTimingIndex].startTime;
+            end = timingData[currentTimingIndex].endTime;
+          } else {
+            wordNum = wordNumber;
+            start = timingData[currentTimingIndex].startTime;
+            end = timingData[currentTimingIndex].endTime;
           }
         }
 
+        // if start and end times are the same, set end time to start of next timing
+        // if it is the last timing data of the segment, leave them the same and timings.ts will sort it out
+        if (start === end && currentTimingIndex < timingData.length - 1) {
+          end = timingData[currentTimingIndex + 1].startTime;
+        }
+        extraTimings.push({
+          wordNum,
+          start,
+          end,
+        });
+
         if (phraseArray[phraseNumber]) {
-          wordNumber += phraseArray[phraseNumber].split(' ').length;
+          wordNumber += phraseArray[phraseNumber].split(' ').filter((w) => w).length;
         }
         phraseNumber++;
 
@@ -349,7 +384,7 @@ class ScriptureAppBuilder implements ProjectSource {
         startTime,
         length: endTime - startTime,
         isHeading: false,
-        extraTiming,
+        extraTimings,
       });
     }
     return segments;
