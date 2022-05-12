@@ -312,7 +312,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Matthew 1.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Matthew 1.mp3'),
                 length: 5016,
               },
             ],
@@ -370,7 +370,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Matthew 2.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Matthew 2.mp3'),
                 length: 6008,
               },
             ],
@@ -443,7 +443,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Matthew 3.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Matthew 3.mp3'),
                 length: 6374,
               },
             ],
@@ -521,7 +521,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Mark 1.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Mark 1.mp3'),
                 length: 4752,
               },
             ],
@@ -558,7 +558,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Mark 2.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Mark 2.mp3'),
                 length: 6531,
               },
             ],
@@ -641,7 +641,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Mark 3.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Mark 3.mp3'),
                 length: 7027,
               },
             ],
@@ -719,7 +719,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Luke 1.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Luke 1.mp3'),
                 length: 5208,
               },
             ],
@@ -756,7 +756,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Luke 2.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Luke 2.mp3'),
                 length: 7549,
               },
             ],
@@ -814,7 +814,7 @@ const expectedSAB = {
           audio: {
             files: [
               {
-                filename: 'C:\\Audacity\\BK Test Luke 3.mp3',
+                filename: join(testPaths.exampleSABProjectPath, 'ExampleSABProject_audio', 'BK Test Luke 3.mp3'),
                 length: 7549,
               },
             ],
