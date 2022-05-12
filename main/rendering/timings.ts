@@ -1,90 +1,90 @@
 import { BKChapter } from '../models/projectFormat.model';
-import { Timings, LineTiming } from '../models/timings.model';
+import { Timings, SegmentTiming, PhraseTiming } from '../models/timings.model';
 
 export function chapterFormatToTimings(chapter: BKChapter): Timings {
   const timings: Timings = [];
-  for (const segment of chapter.segments) {
+  for (const [index, segment] of chapter.segments.entries()) {
     const contentWords = segment.text.split(' ').filter((w) => w);
 
     // if the last timing data has start === end, then set end to the audio duration (end of chapter)
-    let length = segment.length;
-    let lastTiming;
-    if (segment.extraTimings) {
-      lastTiming = segment.extraTimings[segment.extraTimings.length - 1];
-    }
-    if (lastTiming && lastTiming.start === lastTiming.end) {
-      length = chapter.audio.files[0].length;
+    const audioLength = chapter.audio.files[0].length;
+    let end = segment.startTime + segment.length;
+    if (index === chapter.segments.length - 1) {
+      if (end === segment.startTime) {
+        end = audioLength;
+      }
+      let lastTiming;
+      if (segment.extraTimings) {
+        lastTiming = segment.extraTimings[segment.extraTimings.length - 1];
+      }
+      if (lastTiming && lastTiming.start === lastTiming.end) {
+        end = audioLength;
+      }
     }
 
-    const lineTiming: LineTiming = {
+    const segmentTiming: SegmentTiming = {
       type: 'caption',
       index: segment.segmentId,
       start: segment.startTime,
-      end: segment.startTime + length,
-      duration: length,
+      end: end,
+      duration: segment.length,
       content: segment.text,
       words: [],
       isHeading: segment.isHeading,
       extraTimings: segment.extraTimings ?? [],
     };
-    formatPhrases(contentWords, lineTiming, chapter.audio.files[0].length);
-    timings.push(lineTiming);
+    formatPhrases(contentWords, segmentTiming, audioLength);
+    timings.push(segmentTiming);
   }
   return timings;
 }
 
-interface PhraseTiming {
-  words: string[];
-  start: number;
-  duration: number;
-  end: number;
-}
-
-function formatPhrases(words: string[], lineTiming: LineTiming, audioLength: number) {
+function formatPhrases(words: string[], segmentTiming: SegmentTiming, audioLength: number) {
   const phraseTimings: PhraseTiming[] = [];
-  if (lineTiming.extraTimings.length === 0) {
+  if (segmentTiming.extraTimings.length === 0) {
     phraseTimings.push({
       words,
-      start: lineTiming.start,
-      end: lineTiming.end,
-      duration: lineTiming.end - lineTiming.start,
+      start: segmentTiming.start,
+      end: segmentTiming.end,
+      duration: segmentTiming.duration,
     });
-  }
-  for (const [index, currentTiming] of lineTiming.extraTimings.entries()) {
-    const start = currentTiming.start;
-    let end = currentTiming.end;
-    if (index < lineTiming.extraTimings.length - 1) {
-      const nextPhrase = lineTiming.extraTimings[index + 1];
-      if (end > nextPhrase.start) {
-        end = nextPhrase.start;
+  } else {
+    for (const [index, currentTiming] of segmentTiming.extraTimings.entries()) {
+      const start = currentTiming.start;
+      let end = currentTiming.end;
+      if (index < segmentTiming.extraTimings.length - 1) {
+        const nextPhrase = segmentTiming.extraTimings[index + 1];
+        if (end > nextPhrase.start) {
+          end = nextPhrase.start;
+        }
+        phraseTimings.push({
+          words: words.slice(currentTiming.wordNum, nextPhrase.wordNum),
+          start,
+          end,
+          duration: end - start,
+        });
+      } else {
+        // if last timing data in segment, slice to end and set end to audio length if start and end are the same
+        if (end === start) {
+          end = audioLength;
+        }
+        phraseTimings.push({
+          words: words.slice(currentTiming.wordNum),
+          start,
+          end,
+          duration: end - start,
+        });
       }
-      phraseTimings.push({
-        words: words.slice(currentTiming.wordNum, nextPhrase.wordNum),
-        start,
-        end,
-        duration: end - start,
-      });
-    } else {
-      // if last timing data in segment, slice to end and set end to audio length if start and end are the same
-      if (end === start) {
-        end = audioLength;
-      }
-      phraseTimings.push({
-        words: words.slice(currentTiming.wordNum),
-        start,
-        end,
-        duration: end - start,
-      });
     }
   }
   for (const section of phraseTimings) {
-    formatWords(section, lineTiming);
+    formatWords(section, segmentTiming);
   }
 }
 
-function formatWords(phrase: PhraseTiming, lineTiming: LineTiming): void {
+function formatWords(phrase: PhraseTiming, segmentTiming: SegmentTiming): void {
   let start = phrase.start;
-  let totalChars = -1;
+  let totalChars = 0;
   for (const word of phrase.words) {
     totalChars += word.length + 1;
   }
@@ -103,7 +103,7 @@ function formatWords(phrase: PhraseTiming, lineTiming: LineTiming): void {
       end = phrase.end;
     }
 
-    lineTiming.words.push({ word, start, end });
+    segmentTiming.words.push({ word, start, end });
     start = end;
   }
 }

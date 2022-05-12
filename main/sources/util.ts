@@ -29,29 +29,36 @@ export function isValidAudioFile(file: string, audioExtensions: string[]): boole
   return audioExtensions.some((ext: string) => file.toLowerCase().endsWith(`.${ext}`));
 }
 
-export function createPhraseArray(text: string, phraseEndChars: string[]): string[] {
+// splits a string at the phraseEndChars
+export function createPhraseArray(text: string, phraseEndCharsString: string): string[] {
+  const phraseEndChars = createPhraseChars(phraseEndCharsString);
+
   let result: string[] = [];
+
   if (phraseEndChars.length < 1) {
     return [text];
   }
-  let endChar = phraseEndChars[phraseEndChars.length - 1];
-  if (endChar === '\\s') {
-    endChar = ' ';
-  }
+
   for (const [index, char] of phraseEndChars.entries()) {
-    let currentChar = char;
-    if (currentChar === '\\s') {
-      currentChar = ' ';
-    }
     if (index === phraseEndChars.length - 1) {
-      result = text.split(currentChar);
+      result = text.split(char);
     } else {
-      text = text.split(currentChar).join(endChar);
+      text = text.replaceAll(char, phraseEndChars[phraseEndChars.length - 1]);
     }
   }
-  result.forEach((p: string) => p.trim());
-  result.filter((p) => p);
-  return result;
+  return result.map((p: string) => p.trim()).filter((p) => p);
+}
+
+export function createPhraseChars(string: string): string[] {
+  const fixedSpaces = string.replaceAll(' ', '').replaceAll('\\s', ' ');
+  return stringFromUnicode(fixedSpaces).split('');
+}
+
+export function stringFromUnicode(string: string): string {
+  const unicodeRegex = /\\u[\dA-Fa-f]{4}/g;
+  return string.replace(unicodeRegex, function (match) {
+    return String.fromCharCode(parseInt(match.replaceAll('\\u', ''), 16));
+  });
 }
 
 // convert SAB phrase lettering system to number equivalent:

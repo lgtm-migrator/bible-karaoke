@@ -1,9 +1,9 @@
 import { ExtraTiming } from './projectFormat.model';
 
-export type Timings = LineTiming[];
+export type Timings = SegmentTiming[];
 
 // this follows the spec ... ?
-export interface LineTiming {
+export interface SegmentTiming {
   readonly type: 'caption';
   readonly index: number;
   readonly start: number;
@@ -13,6 +13,13 @@ export interface LineTiming {
   readonly words: WordTiming[];
   readonly isHeading: boolean;
   readonly extraTimings: ExtraTiming[];
+}
+
+export interface PhraseTiming {
+  words: string[];
+  start: number;
+  duration: number;
+  end: number;
 }
 
 interface WordTiming {
