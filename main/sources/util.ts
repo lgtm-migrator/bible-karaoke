@@ -74,6 +74,26 @@ export function lettersToNumber(string: string): number {
   return number - 1;
 }
 
+interface VerseJson {
+  verseObjects: VerseObject[];
+}
+interface VerseObject {
+  type: string;
+  text: string;
+}
+
+export function getVerseText(verse: VerseJson): string {
+  return verse.verseObjects
+    .reduce((arr: string[], verseObject: VerseObject) => {
+      if (verseObject.type === 'text') {
+        arr.push(verseObject.text);
+      }
+      return arr;
+    }, [])
+    .join('')
+    .trim();
+}
+
 export const bookNamesAndIds = [
   { bookName: 'Genesis', SAB: 'GEN', FCBH: 'Gen' },
   { bookName: 'Exodus', SAB: 'EXO', FCBH: 'Exod' },

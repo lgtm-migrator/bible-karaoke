@@ -6,7 +6,7 @@ import usfm from 'usfm-js';
 import { SOURCE_TYPES } from '../../src/App/constants';
 import { BKBook, BKChapter, BKProject, BKSegment, ExtraTiming } from '../models/projectFormat.model';
 import ProjectSource from '../models/projectSource.model';
-import { createPhraseArray, getDirectories, lettersToNumber } from './util';
+import { createPhraseArray, getDirectories, getVerseText, lettersToNumber } from './util';
 
 interface SfmJson {
   chapters?: {
@@ -304,7 +304,7 @@ class ScriptureAppBuilder implements ProjectSource {
       }
     }
 
-    let verseText = '';
+    const verseTextArray: string[] = [];
     let segmentId = 0;
     let startTime = 0;
     let endTime = 0;
@@ -353,7 +353,7 @@ class ScriptureAppBuilder implements ProjectSource {
         if (parseInt(verseNumber) === parseInt(verseBridge[0])) {
           startTime = timingData[currentTimingIndex].startTime;
         }
-        verseText += _.find(chapterJson[verseNumber].verseObjects, { type: 'text' })?.text;
+        verseTextArray.push(getVerseText(chapterJson[verseNumber]));
         if (parseInt(verseNumber) < parseInt(verseBridge[1])) {
           continue;
         } else {
@@ -365,7 +365,7 @@ class ScriptureAppBuilder implements ProjectSource {
           }
           segments.push({
             segmentId,
-            text: verseText,
+            text: verseTextArray.join(' '),
             verse: timingVerse,
             startTime,
             length: endTime - startTime,
@@ -373,7 +373,6 @@ class ScriptureAppBuilder implements ProjectSource {
             extraTimings: [],
           });
           segmentId++;
-          verseText = '';
           if (currentTimingIndex < timingData.length - 1) {
             currentTimingIndex++;
           } else {
@@ -386,7 +385,8 @@ class ScriptureAppBuilder implements ProjectSource {
       startTime = timingData[currentTimingIndex].startTime;
       endTime = timingData[currentTimingIndex].endTime;
 
-      verseText = _.find(chapterJson[verseNumber].verseObjects, { type: 'text' })?.text;
+      const verseText = getVerseText(chapterJson[verseNumber]);
+
       if (!verseText || startTime == null || endTime == null) {
         continue;
       }
