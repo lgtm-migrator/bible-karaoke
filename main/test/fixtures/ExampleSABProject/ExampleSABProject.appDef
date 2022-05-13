@@ -250,19 +250,19 @@
 
       <page num="1">
         <audio>
-          <filename src="a1" len="5016" size="121047">C:\Audacity\BK Test Matthew 1.mp3</filename>
+          <filename src="a1" len="5016" size="121047">.\ExampleSABProject_audio\BK Test Matthew 1.mp3</filename>
           <timing-filename>C01-01-MAT-01-timing.txt</timing-filename>
         </audio>
       </page>
       <page num="2">
         <audio>
-          <filename src="a1" len="6008" size="144883">C:\Audacity\BK Test Matthew 2.mp3</filename>
+          <filename src="a1" len="6008" size="144883">.\ExampleSABProject_audio\BK Test Matthew 2.mp3</filename>
           <timing-filename>C01-01-MAT-02-timing.txt</timing-filename>
         </audio>
       </page>
       <page num="3">
         <audio>
-          <filename src="a1" len="6374" size="153661">C:\Audacity\BK Test Matthew 3.mp3</filename>
+          <filename src="a1" len="6374" size="153661">.\ExampleSABProject_audio\BK Test Matthew 3.mp3</filename>
           <timing-filename>C01-01-MAT-03-timing.txt</timing-filename>
         </audio>
       </page>
@@ -327,19 +327,19 @@
 
       <page num="1">
         <audio>
-          <filename src="a1" len="4752" size="114708">C:\Audacity\BK Test Mark 1.mp3</filename>
+          <filename src="a1" len="4752" size="114708">.\ExampleSABProject_audio\BK Test Mark 1.mp3</filename>
           <timing-filename>C01-02-MRK-01-timing.txt</timing-filename>
         </audio>
       </page>
       <page num="2">
         <audio>
-          <filename src="a1" len="6531" size="157419">C:\Audacity\BK Test Mark 2.mp3</filename>
+          <filename src="a1" len="6531" size="157419">.\ExampleSABProject_audio\BK Test Mark 2.mp3</filename>
           <timing-filename>C01-02-MRK-02-timing.txt</timing-filename>
         </audio>
       </page>
       <page num="3">
         <audio>
-          <filename src="a1" len="7027" size="169331">C:\Audacity\BK Test Mark 3.mp3</filename>
+          <filename src="a1" len="7027" size="169331">.\ExampleSABProject_audio\BK Test Mark 3.mp3</filename>
           <timing-filename>C01-02-MRK-03-timing.txt</timing-filename>
         </audio>
       </page>
@@ -380,19 +380,19 @@
 
       <page num="1">
         <audio>
-          <filename src="a1" len="5208" size="125652">C:\Audacity\BK Test Luke 1.mp3</filename>
+          <filename src="a1" len="5208" size="125652">.\ExampleSABProject_audio\BK Test Luke 1.mp3</filename>
           <timing-filename>C01-03-LUK-01-timing.txt</timing-filename>
         </audio>
       </page>
       <page num="2">
         <audio>
-          <filename src="a1" len="7549" size="181870">C:\Audacity\BK Test Luke 2.mp3</filename>
+          <filename src="a1" len="7549" size="181870">.\ExampleSABProject_audio\BK Test Luke 2.mp3</filename>
           <timing-filename>C01-03-LUK-02-timing.txt</timing-filename>
         </audio>
       </page>
       <page num="3">
         <audio>
-          <filename src="a1" len="7549" size="181870">C:\Audacity\BK Test Luke 3.mp3</filename>
+          <filename src="a1" len="7549" size="181870">.\ExampleSABProject_audio\BK Test Luke 3.mp3</filename>
           <timing-filename>C01-03-LUK-03-timing.txt</timing-filename>
         </audio>
       </page>
