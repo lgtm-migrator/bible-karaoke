@@ -49,26 +49,26 @@ export function createPhraseArray(text: string, phraseEndCharsString: string): s
   return result.map((p: string) => p.trim()).filter((p) => p);
 }
 
-export function createPhraseChars(string: string): string[] {
-  const fixedSpaces = string.replaceAll(' ', '').replaceAll('\\s', ' ');
+export function createPhraseChars(phraseCharString: string): string[] {
+  const fixedSpaces = phraseCharString.replaceAll(' ', '').replaceAll('\\s', ' ');
   return stringFromUnicode(fixedSpaces).split('');
 }
 
-export function stringFromUnicode(string: string): string {
+export function stringFromUnicode(unicodeString: string): string {
   const unicodeRegex = /\\u[\dA-Fa-f]{4}/g;
-  return string.replace(unicodeRegex, function (match) {
+  return unicodeString.replace(unicodeRegex, function (match) {
     return String.fromCharCode(parseInt(match.replaceAll('\\u', ''), 16));
   });
 }
 
 // convert SAB phrase lettering system to number equivalent:
 // a = 0, z = 25, aa = 26 etc.
-export function lettersToNumber(string: string): number {
+export function lettersToNumber(letterString: string): number {
   const letters = 'abcdefghijklmnopqrstuvwxyz';
   let number = 0;
-  let exponent = string.length - 1;
-  for (let i = 0; i < string.length; i++) {
-    number += (letters.indexOf(string[i].toLowerCase()) + 1) * letters.length ** exponent;
+  let exponent = letterString.length - 1;
+  for (let i = 0; i < letterString.length; i++) {
+    number += (letters.indexOf(letterString[i].toLowerCase()) + 1) * letters.length ** exponent;
     exponent--;
   }
   return number - 1;

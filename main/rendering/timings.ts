@@ -7,7 +7,9 @@ export function chapterFormatToTimings(chapter: BKChapter): Timings {
     const contentWords = segment.text.split(' ').filter((w) => w);
 
     // if the last timing data has start === end, then set end to the audio duration (end of chapter)
-    const audioLength = chapter.audio.files[0].length;
+    const audioLength = chapter.audio.files.reduce((totalLength, file) => {
+      return (totalLength += file.length);
+    }, 0);
     let end = segment.startTime + segment.length;
     if (index === chapter.segments.length - 1) {
       if (end === segment.startTime) {
