@@ -32,4 +32,11 @@ export interface BKSegment {
   readonly startTime: number;
   readonly length: number;
   readonly isHeading: boolean;
+  readonly extraTimings?: ExtraTiming[];
+}
+
+export interface ExtraTiming {
+  wordNum: number;
+  start: number;
+  end: number;
 }

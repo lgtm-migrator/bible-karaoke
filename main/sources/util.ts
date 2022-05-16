@@ -29,6 +29,71 @@ export function isValidAudioFile(file: string, audioExtensions: string[]): boole
   return audioExtensions.some((ext: string) => file.toLowerCase().endsWith(`.${ext}`));
 }
 
+// splits a string at the phraseEndChars
+export function createPhraseArray(text: string, phraseEndCharsString: string): string[] {
+  const phraseEndChars = createPhraseChars(phraseEndCharsString);
+
+  let result: string[] = [];
+
+  if (phraseEndChars.length < 1) {
+    return [text];
+  }
+
+  for (const [index, char] of phraseEndChars.entries()) {
+    if (index === phraseEndChars.length - 1) {
+      result = text.split(char);
+    } else {
+      text = text.replaceAll(char, phraseEndChars[phraseEndChars.length - 1]);
+    }
+  }
+  return result.map((p: string) => p.trim()).filter((p) => p);
+}
+
+export function createPhraseChars(phraseCharString: string): string[] {
+  const fixedSpaces = phraseCharString.replaceAll(' ', '').replaceAll('\\s', ' ');
+  return stringFromUnicode(fixedSpaces).split('');
+}
+
+export function stringFromUnicode(unicodeString: string): string {
+  const unicodeRegex = /\\u[\dA-Fa-f]{4}/g;
+  return unicodeString.replace(unicodeRegex, function (match) {
+    return String.fromCharCode(parseInt(match.replaceAll('\\u', ''), 16));
+  });
+}
+
+// convert SAB phrase lettering system to number equivalent:
+// a = 0, z = 25, aa = 26 etc.
+export function lettersToNumber(letterString: string): number {
+  const letters = 'abcdefghijklmnopqrstuvwxyz';
+  let number = 0;
+  let exponent = letterString.length - 1;
+  for (let i = 0; i < letterString.length; i++) {
+    number += (letters.indexOf(letterString[i].toLowerCase()) + 1) * letters.length ** exponent;
+    exponent--;
+  }
+  return number - 1;
+}
+
+interface VerseJson {
+  verseObjects: VerseObject[];
+}
+interface VerseObject {
+  type: string;
+  text: string;
+}
+
+export function getVerseText(verse: VerseJson): string {
+  return verse.verseObjects
+    .reduce((arr: string[], verseObject: VerseObject) => {
+      if (verseObject.type === 'text') {
+        arr.push(verseObject.text);
+      }
+      return arr;
+    }, [])
+    .join('')
+    .trim();
+}
+
 export const bookNamesAndIds = [
   { bookName: 'Genesis', SAB: 'GEN', FCBH: 'Gen' },
   { bookName: 'Exodus', SAB: 'EXO', FCBH: 'Exod' },
@@ -87,7 +152,7 @@ export const bookNamesAndIds = [
   { bookName: 'Luke', SAB: 'LUK', FCBH: 'Luke' },
   { bookName: 'John', SAB: 'JHN', FCBH: 'John' },
   { bookName: 'Acts', SAB: 'ACT', FCBH: 'Acts' },
-  { bookName: 'Romams', SAB: 'ROM', FCBH: 'Rom' },
+  { bookName: 'Romans', SAB: 'ROM', FCBH: 'Rom' },
   { bookName: '1 Corinthians', SAB: '1CO', FCBH: '1Cor' },
   { bookName: '2 Corinthians', SAB: '2CO', FCBH: '2Cor' },
   { bookName: 'Galatians', SAB: 'GAL', FCBH: 'Gal' },
@@ -96,7 +161,7 @@ export const bookNamesAndIds = [
   { bookName: 'Colossians', SAB: 'COL', FCBH: 'Col' },
   { bookName: '1 Thessalonians', SAB: '1TH', FCBH: '1Thess' },
   { bookName: '2 Thessalonians', SAB: '2TH', FCBH: '2Thess' },
-  { bookName: '1 Timoth', SAB: '1TI', FCBH: '1Tim' },
+  { bookName: '1 Timothy', SAB: '1TI', FCBH: '1Tim' },
   { bookName: '2 Timothy', SAB: '2TI', FCBH: '2Tim' },
   { bookName: 'Titus', SAB: 'TIT', FCBH: 'Titus' },
   { bookName: 'Philemon', SAB: 'PHM', FCBH: 'Phlm' },

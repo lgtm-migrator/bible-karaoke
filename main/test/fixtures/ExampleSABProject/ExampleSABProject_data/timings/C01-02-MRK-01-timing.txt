@@ -1,0 +1,6 @@
+\id MRK
+\c 1
+\level phrase
+\separators . ? ! : ; ,
+0.000	2.820	1-2
+2.820	4.680	3

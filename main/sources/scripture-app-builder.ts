@@ -4,9 +4,9 @@ import { JSDOM } from 'jsdom';
 import _ from 'lodash';
 import usfm from 'usfm-js';
 import { SOURCE_TYPES } from '../../src/App/constants';
-import { BKBook, BKChapter, BKProject, BKSegment } from '../models/projectFormat.model';
+import { BKBook, BKChapter, BKProject, BKSegment, ExtraTiming } from '../models/projectFormat.model';
 import ProjectSource from '../models/projectSource.model';
-import { getDirectories } from './util';
+import { createPhraseArray, getDirectories, getVerseText, lettersToNumber } from './util';
 
 interface SfmJson {
   chapters?: {
@@ -43,7 +43,31 @@ class ScriptureAppBuilder implements ProjectSource {
   }
 
   reloadProject(project: BKProject): BKProject {
-    return project;
+    let reloadedProject = this.makeProject(path.parse(project.folderPath).base, path.parse(project.folderPath).dir);
+    if (Array.isArray(reloadedProject)) {
+      reloadedProject = _.find(reloadedProject, { name: project.name }) ?? reloadedProject[0];
+    }
+    // filter the full reloadedProject based on the input project that contains only the chapters the user has selected
+    return {
+      name: reloadedProject.name,
+      folderPath: reloadedProject.folderPath,
+      sourceType: reloadedProject.sourceType,
+      books: reloadedProject.books.reduce((arr: BKBook[], book: BKBook) => {
+        if (_.find(project.books, { name: book.name })) {
+          const filteredChapters = book.chapters.reduce((arr: BKChapter[], chapter: BKChapter) => {
+            if (_.find(_.find(project.books, { name: book.name })?.chapters, { name: chapter.name })) {
+              arr.push(chapter);
+            }
+            return arr;
+          }, []);
+          arr.push({
+            name: book.name,
+            chapters: filteredChapters,
+          });
+        }
+        return arr;
+      }, []),
+    };
   }
 
   private makeProject(projectName: string, directory: string): BKProject | BKProject[] {
@@ -63,15 +87,19 @@ class ScriptureAppBuilder implements ProjectSource {
     }
     const dom = new JSDOM(contents, { contentType: 'text/xml' });
     const xmlDoc = dom.window.document;
+    const phraseEndChars =
+      xmlDoc.querySelector('feature[name=audio-phrase-end-chars]')?.attributes.getNamedItem('value')?.value ?? '';
+
     const booksIdElements = xmlDoc.querySelectorAll('books[id]');
     const collectionIds = _.map(booksIdElements, (element) => element.id ?? undefined).filter((e) => e != null);
 
+    // return one project for each collectionId if possible
     if (collectionIds.length === 1) {
       const project: BKProject = {
         name: projectName,
         folderPath: path.join(directory, projectName),
         sourceType: this.SOURCE_TYPE,
-        books: this.makeBooks(xmlDoc, projectName, directory, collectionIds[0]),
+        books: this.makeBooks(xmlDoc, projectName, directory, phraseEndChars, collectionIds[0]),
       };
       return project;
     } else if (collectionIds.length > 1) {
@@ -80,7 +108,7 @@ class ScriptureAppBuilder implements ProjectSource {
           name: projectName + ' - ' + id,
           folderPath: path.join(directory, projectName),
           sourceType: this.SOURCE_TYPE,
-          books: this.makeBooks(xmlDoc, projectName, directory, id),
+          books: this.makeBooks(xmlDoc, projectName, directory, phraseEndChars, id),
         };
         return project;
       });
@@ -90,7 +118,13 @@ class ScriptureAppBuilder implements ProjectSource {
     }
   }
 
-  private makeBooks(xmlDoc: Document, projectName: string, directory: string, collectionId: string): BKBook[] {
+  private makeBooks(
+    xmlDoc: Document,
+    projectName: string,
+    directory: string,
+    phraseEndChars: string,
+    collectionId: string
+  ): BKBook[] {
     const books: BKBook[] = [];
     const bookIdSelector = "books[id='" + collectionId + "'] > book[id]";
     const bookIds = _.map(xmlDoc.querySelectorAll(bookIdSelector), (n) => (n.id ? n.id : undefined)).filter(
@@ -123,7 +157,7 @@ class ScriptureAppBuilder implements ProjectSource {
 
       const book: BKBook = {
         name: bookName,
-        chapters: this.makeChapters(bookId, sfmJson, xmlDoc, projectName, directory),
+        chapters: this.makeChapters(bookId, sfmJson, xmlDoc, projectName, directory, phraseEndChars),
       };
 
       if (book.chapters.length > 0) {
@@ -138,7 +172,8 @@ class ScriptureAppBuilder implements ProjectSource {
     sfmJson: SfmJson,
     xmlDoc: Document,
     projectName: string,
-    directory: string
+    directory: string,
+    phraseEndChars: string
   ): BKChapter[] {
     const chapters: BKChapter[] = [];
 
@@ -183,7 +218,14 @@ class ScriptureAppBuilder implements ProjectSource {
         return [];
       }
 
-      const segments: BKSegment[] = this.makeSegments(sfmJson, +chapterNumber, timingFileName, projectName, directory);
+      const segments: BKSegment[] = this.makeSegments(
+        sfmJson,
+        +chapterNumber,
+        phraseEndChars,
+        timingFileName,
+        projectName,
+        directory
+      );
       if (segments.length > 0) {
         chapters.push({
           name: chapterNumber,
@@ -199,13 +241,18 @@ class ScriptureAppBuilder implements ProjectSource {
   private makeSegments(
     sfmJson: SfmJson,
     chapterNumber: number,
+    phraseEndChars: string,
     timingFileName: string,
     projectName: string,
     directory: string
   ): BKSegment[] {
     const segments: BKSegment[] = [];
 
-    const timingFileFullName = path.join(directory, projectName, projectName + '_data', 'timings', timingFileName);
+    // timingFileName is usually a file name in the timings folder, but can possibly be a full file path
+    let timingFileFullName = path.join(directory, projectName, projectName + '_data', 'timings', timingFileName);
+    if (!fs.existsSync(timingFileFullName)) {
+      timingFileFullName = timingFileName;
+    }
 
     let timingFileContent;
 
@@ -220,13 +267,19 @@ class ScriptureAppBuilder implements ProjectSource {
     // tab separated list with possible decimals
     // representing respectively: start time, end time, verse number
     // e.g. 124.12  123  1
-    const timingPattern = /(\d+\.?\d*)\t(\d+\.?\d*)\t(\d+)/gs;
+
+    // verse number can be a number representing a verse, a number followed by a letter representing a phrase (separated by phraseEndChars), blank representing the next phrase in the current verse, or can be followed by an underscore and number representing that numbered word in the phrase or verse
+    // e.g. 1.2 2.1 1b_3 (meaning 3rd word of second phrase in first verse)
+    // the verse number can also be two verses connected by a dash as a bridge verse
+    // e.g. 12-13 (verse 12 to verse 13)
+    // https://software.sil.org/downloads/r/scriptureappbuilder/Scripture-App-Builder-06-Using-Audacity-for-Audio-Text-Synchronization.pdf
+    const timingPattern = /(\d+\.?\d*)\t(\d+\.?\d*)\t([\w|-]*)/gs;
 
     let timingMatches;
-    const timingOutput = [];
+    const timingData = [];
     while ((timingMatches = timingPattern.exec(timingFileContent))) {
       //this is where we get the start time, duration, and verse number from the timing file
-      timingOutput.push({
+      timingData.push({
         startTime: parseFloat(timingMatches[1]) * 1000,
         endTime: parseFloat(timingMatches[2]) * 1000,
         verse: timingMatches[3],
@@ -237,22 +290,210 @@ class ScriptureAppBuilder implements ProjectSource {
     if (!chapterJson) {
       return [];
     }
-    for (const verse in chapterJson) {
-      const startTime = _.find(timingOutput, { verse })?.startTime;
-      const endTime = _.findLast(timingOutput, { verse })?.endTime;
-      const text = chapterJson[verse].verseObjects[0].text;
-      // skip segment if missing timing info
-      if (startTime == null || endTime == null || !text) {
+    let currentTimingIndex = 0;
+    // set timingIndex to index of first verse number
+    while (
+      isNaN(parseInt(timingData[currentTimingIndex].verse)) ||
+      parseInt(timingData[currentTimingIndex].verse) < 0
+    ) {
+      if (currentTimingIndex < timingData.length - 1) {
+        currentTimingIndex++;
+      } else {
+        currentTimingIndex = -1;
+        break;
+      }
+    }
+
+    const verseTextArray: string[] = [];
+    let segmentId = 0;
+    let startTime = 0;
+    let endTime = 0;
+    for (const verseNumber in chapterJson) {
+      // exit if the end of the timing data is reached
+      if (currentTimingIndex === -1) {
+        break;
+      }
+
+      let timingVerse = '';
+      if (timingData[currentTimingIndex]?.verse) {
+        timingVerse = timingData[currentTimingIndex].verse;
+      }
+
+      let verseBridge: string[] = [];
+      // skip segment if wrong verse
+      if (Number.isInteger(parseInt(timingVerse))) {
+        if (parseInt(verseNumber) < parseInt(timingVerse)) {
+          continue;
+        }
+        while (
+          parseInt(verseNumber) >
+          Math.max(
+            parseInt(timingData[currentTimingIndex].verse),
+            parseInt(timingData[currentTimingIndex].verse.split('-')[1] ?? 0)
+          )
+        ) {
+          if (currentTimingIndex < timingData.length - 1) {
+            currentTimingIndex++;
+          } else {
+            currentTimingIndex = -1;
+            break;
+          }
+        }
+        if (currentTimingIndex === -1) {
+          break;
+        }
+      }
+
+      // allowance for verse bridge numbers, e.g. 10-11, that combines the verses into one
+      if (timingVerse) {
+        verseBridge = timingVerse.split('-');
+      }
+
+      if (verseBridge.length > 1) {
+        if (parseInt(verseNumber) === parseInt(verseBridge[0])) {
+          startTime = timingData[currentTimingIndex].startTime;
+        }
+        verseTextArray.push(getVerseText(chapterJson[verseNumber]));
+        if (parseInt(verseNumber) < parseInt(verseBridge[1])) {
+          continue;
+        } else {
+          endTime = timingData[currentTimingIndex].endTime;
+          if (startTime === endTime) {
+            if (currentTimingIndex < timingData.length - 1) {
+              endTime = timingData[currentTimingIndex + 1].startTime;
+            }
+          }
+          segments.push({
+            segmentId,
+            text: verseTextArray.join(' '),
+            verse: timingVerse,
+            startTime,
+            length: endTime - startTime,
+            isHeading: false,
+            extraTimings: [],
+          });
+          segmentId++;
+          if (currentTimingIndex < timingData.length - 1) {
+            currentTimingIndex++;
+          } else {
+            currentTimingIndex = -1;
+          }
+          continue;
+        }
+      }
+
+      startTime = timingData[currentTimingIndex].startTime;
+      endTime = timingData[currentTimingIndex].endTime;
+
+      const verseText = getVerseText(chapterJson[verseNumber]);
+
+      if (!verseText || startTime == null || endTime == null) {
         continue;
       }
+
+      let currentWord = 0;
+      let currentPhrase = 0;
+      const phraseArray = createPhraseArray(verseText, phraseEndChars);
+
+      const extraTimings: ExtraTiming[] = [];
+
+      // gets timing info if the verse number is correct or if it is blank (blank meaning next phrase of current verse)
+      while (
+        parseInt(timingData[currentTimingIndex].verse) === parseInt(verseNumber) ||
+        !timingData[currentTimingIndex].verse
+      ) {
+        // if start and end times are the same, set end time to start of next timing
+        // if it is the last timing data of the chapter, leave them the same and timings.ts will sort it out
+        if (timingData[currentTimingIndex].startTime === timingData[currentTimingIndex].endTime) {
+          if (currentTimingIndex < timingData.length - 1) {
+            endTime = timingData[currentTimingIndex + 1].startTime;
+          }
+        } else {
+          endTime = timingData[currentTimingIndex].endTime;
+        }
+
+        // match the verse string from the timing data:
+        // verse number, then letter to indicate phrase number, underscore then word number
+        // e.g. 1b_3; verse 1, phrase 2, word 3
+        const verseRegex = /\d+([a-z]*)_?(\d*)/;
+        let match: RegExpMatchArray | null = [];
+        let wordNum = 0;
+        const extraTimingStart = timingData[currentTimingIndex].startTime;
+        let extraTimingEnd = timingData[currentTimingIndex].endTime;
+
+        if (!timingData[currentTimingIndex].verse) {
+          wordNum = currentWord;
+        } else {
+          match = timingData[currentTimingIndex].verse.match(verseRegex);
+        }
+        if (match) {
+          // match[1] is the letter representing the phrase
+          if (match[1]) {
+            // count words for current phrase
+            const phraseNumber = lettersToNumber(match[1]);
+            if (phraseNumber < currentPhrase) {
+              if (phraseArray[currentPhrase - 1]) {
+                currentWord -= this.numberOfWords(phraseArray[currentPhrase - 1]);
+              } else {
+                currentWord = 0;
+              }
+              currentPhrase = phraseNumber;
+            } else {
+              while (phraseNumber > currentPhrase) {
+                if (phraseArray[currentPhrase]) {
+                  currentWord += this.numberOfWords(phraseArray[currentPhrase]);
+                }
+                currentPhrase++;
+              }
+            }
+            // match[2] is the word number within the phrase
+            if (match[2]) {
+              wordNum = currentWord + parseInt(match[2]) - 1;
+            } else {
+              wordNum = currentWord;
+            }
+          } else if (match[2]) {
+            wordNum = parseInt(match[2]) - 1;
+          } else {
+            wordNum = currentWord;
+          }
+        }
+
+        // if start and end times are the same, set end time to start of next timing
+        // if it is the last timing data of the segment, leave them the same and timings.ts will sort it out
+        if (extraTimingStart === extraTimingEnd && currentTimingIndex < timingData.length - 1) {
+          extraTimingEnd = timingData[currentTimingIndex + 1].startTime;
+        }
+        extraTimings.push({
+          wordNum,
+          start: extraTimingStart,
+          end: extraTimingEnd,
+        });
+
+        if (phraseArray[currentPhrase]) {
+          currentWord += this.numberOfWords(phraseArray[currentPhrase]);
+        }
+        currentPhrase++;
+
+        // exit if the end of the timing data is reached
+        if (currentTimingIndex < timingData.length - 1) {
+          currentTimingIndex++;
+        } else {
+          currentTimingIndex = -1;
+          break;
+        }
+      }
+
       segments.push({
-        segmentId: parseInt(verse),
-        text,
-        verse,
+        segmentId,
+        text: verseText,
+        verse: verseNumber,
         startTime,
         length: endTime - startTime,
         isHeading: false,
+        extraTimings,
       });
+      segmentId++;
     }
     return segments;
   }
@@ -280,6 +521,10 @@ class ScriptureAppBuilder implements ProjectSource {
       }
     }
     return undefined;
+  }
+
+  private numberOfWords(phrase: string): number {
+    return phrase.split(' ').filter((w) => w).length;
   }
 }
 
