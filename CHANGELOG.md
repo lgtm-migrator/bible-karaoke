@@ -6,6 +6,15 @@
 - :thumbsup: Improvement
 - :boom: Bug fix
 
+## v1.1.1
+
+This is a patch feature and bugfix release:
+
+- :star: You can now _Select All_ or _Clear All_ books in the **Book** panel
+- :thumbsup: Uses phrase and word timing data from **Scripture App Builder** (SAB), in addition to the verse timing data
+- :thumbsup: improved security of the app
+- :boom: The green badges no longer show when selected multiple books - videos are still combined in canonical order
+
 ## v1.1.0
 
 This is a minor feature and bugfix release:
